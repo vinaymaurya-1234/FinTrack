@@ -1,0 +1,136 @@
+.transactions-page{
+    padding:30px;
+    background:#f5f7fb;
+    min-height:100vh;
+}
+
+.transactions-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.transactions-header h2{
+    font-size:30px;
+    font-weight:700;
+}
+
+.add-btn{
+    border:none;
+    cursor:pointer;
+
+    background:#6d5ef8;
+    color:white;
+
+    padding:12px 22px;
+
+    border-radius:12px;
+
+    font-size:15px;
+    font-weight:600;
+
+    transition:.3s;
+}
+
+.add-btn:hover{
+    background:#5a4ae3;
+}
+
+/* ===========================
+   Search + Filter
+=========================== */
+
+.transactions-toolbar{
+
+    margin-top:25px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+
+}
+
+.search-input{
+
+    flex:1;
+
+    padding:14px 18px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:white;
+
+    font-size:15px;
+
+    outline:none;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.06);
+
+}
+
+.filter-buttons{
+
+    display:flex;
+    gap:12px;
+
+}
+
+.filter-buttons button{
+
+    border:none;
+
+    background:white;
+
+    padding:12px 18px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:.3s;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.06);
+
+}
+
+.filter-buttons button:hover{
+
+    background:#6d5ef8;
+    color:white;
+
+}
+
+.filter-buttons .active{
+
+    background:#6d5ef8;
+    color:white;
+
+}
+
+@media (max-width:768px){
+
+.transactions-toolbar{
+
+    flex-direction:column;
+    align-items:stretch;
+
+}
+
+.filter-buttons{
+
+    justify-content:space-between;
+
+}
+
+.filter-buttons button{
+
+    flex:1;
+
+}
+
+}

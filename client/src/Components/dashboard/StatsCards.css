@@ -56,3 +56,28 @@
   color: #888;
   font-size: 14px;
 }
+
+@media (max-width: 768px){
+
+.stats-cards{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+}
+
+.card{
+    padding:18px;
+    border-radius:16px;
+}
+
+.card h3{
+    font-size:14px;
+    margin-bottom:10px;
+}
+
+.card p{
+    font-size:24px;
+    font-weight:700;
+}
+
+}

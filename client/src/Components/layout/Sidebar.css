@@ -9,6 +9,11 @@
   justify-content: space-between;
 
   padding: 24px 18px;
+
+  top:0;
+  z-index:1000;
+
+  transition: left .3s ease;
 }
 
 .sidebar-logo h2 {
@@ -57,4 +62,97 @@
 
 .sidebar-footer {
   margin-top: auto;
+}
+
+/* ================= Responsive ================= */
+
+@media (max-width: 992px){
+
+.sidebar{
+
+    width: 90px;
+    padding: 24px 12px;
+
+}
+
+.sidebar-logo h2{
+
+    font-size:20px;
+    text-align:center;
+
+}
+
+.menu-item{
+
+    justify-content:center;
+    padding:14px;
+
+}
+
+.menu-item span{
+
+    display:none;
+
+}
+
+.sidebar-footer .menu-item{
+
+    justify-content:center;
+
+}
+
+}
+
+
+
+@media (max-width:768px){
+
+.sidebar{
+
+    position:fixed;
+
+    top:0;
+    left:-260px;
+
+    width:260px;
+
+    height:100vh;
+
+    background:#fff;
+
+    z-index:1000;
+
+    transition:.3s;
+
+    box-shadow:0 10px 40px rgba(0,0,0,.15);
+
+}
+
+.sidebar.open{
+
+    left:0;
+
+}
+
+.menu-item{
+
+    justify-content:flex-start;
+
+    padding:14px 16px;
+
+}
+
+.menu-item span{
+
+    display:block;
+
+}
+
+.sidebar-logo h2{
+
+    text-align:left;
+    font-size:28px;
+
+}
+
 }

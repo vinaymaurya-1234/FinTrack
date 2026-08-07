@@ -83,3 +83,27 @@
   font-size: 13px;
   color: #777;
 }
+
+.navbar-left{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.menu-btn{
+
+    display:none;
+
+    border:none;
+    background:none;
+    font-size:22px;
+    cursor:pointer;
+}
+
+@media (max-width:768px){
+
+.menu-btn{
+    display:block;
+}
+
+}

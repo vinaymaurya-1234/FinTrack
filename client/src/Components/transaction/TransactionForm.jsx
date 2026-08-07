@@ -35,7 +35,7 @@ function TransactionForm({ closeModal }) {
             </select>
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Amount</label>
 
             <input type="number" placeholder="Enter amount" />
@@ -45,12 +45,24 @@ function TransactionForm({ closeModal }) {
             <label>Date</label>
 
             <input type="date" />
+          </div> */}
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Amount</label>
+              <input type="number" placeholder="Enter amount" />
+            </div>
+
+            <div className="form-group">
+              <label>Date</label>
+              <input type="date" />
+            </div>
           </div>
 
           <div className="form-group">
-            <label>Note</label>
+            <label>Note (Optional)</label>
 
-            <textarea rows="3" placeholder="Write note..." />
+            <textarea rows="2" placeholder="Write note..." />
           </div>
 
           <button className="save-btn">Save Transaction</button>

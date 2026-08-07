@@ -3,12 +3,19 @@ import { MdDashboard, MdOutlineAccountBalanceWallet } from "react-icons/md";
 import { FaWallet, FaChartPie, FaUserCircle } from "react-icons/fa";
 import { HiDocumentReport } from "react-icons/hi";
 import { BsBullseye } from "react-icons/bs";
-
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import "./Sidebar.css";
 
-function Sidebar() {
+function Sidebar({ isOpen, setIsOpen }) {
+  const location = useLocation();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? "open" : ""}`}>
       <div className="sidebar-logo">
         <h2>FinTrack</h2>
       </div>

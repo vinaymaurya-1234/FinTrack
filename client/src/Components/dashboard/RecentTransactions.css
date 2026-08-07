@@ -23,15 +23,98 @@
 }
 
 .transaction-item h4 {
-  font-size: 16px;
+  font-size: 20px;
+  font-weight: 500;
 }
 
 .transaction-item p {
-  color: #888;
-  font-size: 13px;
+  color: #777;
+  font-size: 16px;
 }
 
 .income {
+  font-size: 16px;
   color: #22c55e;
   font-weight: 600;
+}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width:1024px){
+
+.recent-transactions{
+    padding:20px;
+}
+
+}
+
+
+/* ---------- Mobile ---------- */
+
+@media (max-width:768px){
+
+.recent-transactions{
+
+    padding:18px;
+    border-radius:16px;
+
+}
+
+.recent-transactions h3{
+
+    font-size:18px;
+
+}
+
+.transaction-item{
+
+    padding:14px 0;
+
+}
+
+.transaction-item h4{
+    font-size:20px;
+}
+
+.transaction-item p{
+    font-size:17px;
+}
+
+.income,
+.expense{
+    font-size:18x;
+}
+
+}
+
+
+/* ---------- Small Phones ---------- */
+
+@media (max-width:480px){
+
+.recent-transactions{
+
+    padding:16px;
+
+}
+
+.transaction-item{
+
+    gap:10px;
+
+}
+
+.transaction-item h4{
+    font-size:22px;
+}
+
+.transaction-item p{
+    font-size:18px;
+}
+
+.income,
+.expense{
+    font-size:18px;
+}
+
 }
