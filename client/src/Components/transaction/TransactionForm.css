@@ -1,0 +1,63 @@
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index: 9999;
+}
+
+.transaction-modal{
+    width:500px;
+    background:#fff;
+    border-radius:16px;
+    padding:25px;
+    z-index: 10000;
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.modal-header button{
+    border:none;
+    background:none;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    margin-bottom:18px;
+}
+
+.form-group label{
+    margin-bottom:8px;
+    font-weight:500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    outline:none;
+}
+
+.save-btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#6d5ef8;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}

@@ -1,0 +1,19 @@
+.dashboard {
+  padding: 30px;
+  background: #f5f7fb;
+  min-height: calc(100vh - 80px);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+.dashboard-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}

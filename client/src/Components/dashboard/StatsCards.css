@@ -1,0 +1,58 @@
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: .3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-top h4 {
+  font-size: 16px;
+  color: #666;
+}
+
+.card-icon {
+  font-size: 22px;
+}
+
+.balance {
+  color: #6d5ef8;
+}
+
+.income {
+  color: #22c55e;
+}
+
+.expense {
+  color: #ef4444;
+}
+
+.saving {
+  color: #f59e0b;
+}
+
+.stat-card h2 {
+  margin: 20px 0 10px;
+  font-size: 32px;
+}
+
+.card-info {
+  color: #888;
+  font-size: 14px;
+}

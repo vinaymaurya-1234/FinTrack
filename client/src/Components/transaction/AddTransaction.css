@@ -1,0 +1,15 @@
+.add-transaction-btn{
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    background:#6d5ef8;
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.add-transaction-btn:hover{
+    background:#5b4cf0;
+}

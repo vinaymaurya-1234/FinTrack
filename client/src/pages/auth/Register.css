@@ -1,0 +1,100 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.Register-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+.Register-left {
+  width: 50%;
+  background: #6d5ef8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  color: white;
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.Register-right {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.Register-card {
+  width: 420px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.Register-title {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.Register-subtitle {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  font-size: 16px;
+}
+
+.input-field:focus {
+  border-color: #6d5ef8;
+}
+
+.Register-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #6d5ef8;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.Register-btn:hover {
+  background: #5b4cf0;
+}
+
+.register-text {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.login-link {
+  color: #6d5ef8;
+  cursor: pointer;
+  font-weight: 600;
+}
