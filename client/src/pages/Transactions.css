@@ -1,136 +1,284 @@
-.transactions-page{
-    padding:30px;
-    background:#f5f7fb;
-    min-height:100vh;
+.transactions-page {
+  padding: 30px;
+  background: #f5f7fb;
+  min-height: 100vh;
 }
 
-.transactions-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+/* Header */
+
+.transactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.transactions-header h2{
-    font-size:30px;
-    font-weight:700;
+.transactions-header h2 {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0;
 }
 
-.add-btn{
-    border:none;
-    cursor:pointer;
+/* Add Button */
 
-    background:#6d5ef8;
-    color:white;
-
-    padding:12px 22px;
-
-    border-radius:12px;
-
-    font-size:15px;
-    font-weight:600;
-
-    transition:.3s;
+.add-btn {
+  border: none;
+  cursor: pointer;
+  background: #6d5ef8;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: 0.3s;
 }
 
-.add-btn:hover{
-    background:#5a4ae3;
+.add-btn:hover {
+  background: #5b4ce0;
 }
 
-/* ===========================
-   Search + Filter
-=========================== */
+/* Search + Filter */
 
-.transactions-toolbar{
-
-    margin-top:25px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:20px;
-
+.transactions-toolbar {
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
-.search-input{
-
-    flex:1;
-
-    padding:14px 18px;
-
-    border:none;
-
-    border-radius:12px;
-
-    background:white;
-
-    font-size:15px;
-
-    outline:none;
-
-    box-shadow:0 8px 20px rgba(0,0,0,.06);
-
+.search-input {
+  flex: 1;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 12px;
+  background: white;
+  font-size: 15px;
+  outline: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
-.filter-buttons{
-
-    display:flex;
-    gap:12px;
-
+.filter-buttons {
+  display: flex;
+  gap: 12px;
 }
 
-.filter-buttons button{
-
-    border:none;
-
-    background:white;
-
-    padding:12px 18px;
-
-    border-radius:12px;
-
-    cursor:pointer;
-
-    font-weight:600;
-
-    transition:.3s;
-
-    box-shadow:0 8px 20px rgba(0,0,0,.06);
-
+.filter-buttons button {
+  border: none;
+  background: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
-.filter-buttons button:hover{
-
-    background:#6d5ef8;
-    color:white;
-
+.filter-buttons button:hover {
+  background: #6d5ef8;
+  color: white;
 }
 
-.filter-buttons .active{
-
-    background:#6d5ef8;
-    color:white;
-
+.filter-buttons .active {
+  background: #6d5ef8;
+  color: white;
 }
 
-@media (max-width:768px){
+/* =========================
+   Transactions Table
+========================= */
 
-.transactions-toolbar{
-
-    flex-direction:column;
-    align-items:stretch;
-
+.transactions-table {
+  margin-top: 25px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
 }
 
-.filter-buttons{
+/* Table Header */
 
-    justify-content:space-between;
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 1.3fr 1.5fr 1.5fr;
+  align-items: center;
+  padding: 18px 22px;
+  background: #fafafa;
+  border-bottom: 1px solid #eeeeee;
 
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
 }
 
-.filter-buttons button{
+/* Table Row */
 
-    flex:1;
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 1.3fr 1.5fr 1.5fr;
+  align-items: center;
 
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #eeeeee;
+
+  font-size: 15px;
+  color: #111827;
 }
 
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row:hover {
+  background: #fafaff;
+}
+
+/* Expense */
+
+.expense {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Amount */
+
+.amount {
+  font-weight: 600;
+}
+
+/* Actions */
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.edit-btn {
+  background: #eeeaff;
+  color: #6d5ef8;
+}
+
+.edit-btn:hover {
+  background: #6d5ef8;
+  color: white;
+}
+
+.delete-btn {
+  background: #fff0f0;
+  color: #ef4444;
+}
+
+.delete-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 900px) {
+  .transactions-page {
+    padding: 22px;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1.7fr 1.2fr 1.2fr 1.4fr 1.5fr;
+    padding: 16px;
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 768px) {
+  .transactions-page {
+    padding: 16px;
+  }
+
+  .transactions-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .transactions-header h2 {
+    font-size: 24px;
+  }
+
+  .add-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .transactions-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .filter-buttons {
+    justify-content: space-between;
+  }
+
+  .filter-buttons button {
+    flex: 1;
+    padding: 11px 8px;
+  }
+
+  /* Mobile table becomes cards */
+
+  .table-header {
+    display: none;
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    padding: 18px;
+  }
+
+  .table-row > span:nth-child(1) {
+    font-weight: 600;
+  }
+
+  .table-row > span:nth-child(2) {
+    text-align: right;
+  }
+
+  .table-row > span:nth-child(3) {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .table-row > span:nth-child(4) {
+    text-align: right;
+    color: #6b7280;
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    margin-top: 5px;
+  }
+
+  .actions button {
+    flex: 1;
+    padding: 10px;
+  }
 }
