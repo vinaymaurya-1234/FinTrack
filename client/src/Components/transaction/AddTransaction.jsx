@@ -2,8 +2,31 @@ import { useState } from "react";
 import "./AddTransaction.css";
 import TransactionForm from "./TransactionForm";
 
-function AddTransaction() {
+function AddTransaction({
+  onSave,
+  transactionToEdit,
+  onUpdate,
+  clearEdit,
+}) {
   const [open, setOpen] = useState(false);
+
+  const handleClose = () => {
+    setOpen(false);
+
+    if (clearEdit) {
+      clearEdit();
+    }
+  };
+
+  const handleFormSave = (transaction) => {
+    if (transactionToEdit) {
+      onUpdate(transaction);
+    } else {
+      onSave(transaction);
+    }
+
+    handleClose();
+  };
 
   return (
     <>
@@ -14,9 +37,11 @@ function AddTransaction() {
         + Add Transaction
       </button>
 
-      {open && (
+      {(open || transactionToEdit) && (
         <TransactionForm
-          closeModal={() => setOpen(false)}
+          closeModal={handleClose}
+          onSave={handleFormSave}
+          transactionToEdit={transactionToEdit}
         />
       )}
     </>
