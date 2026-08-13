@@ -1,38 +1,49 @@
 import "./RecentTransactions.css";
 
 function RecentTransactions() {
+  const transactions = JSON.parse(
+    localStorage.getItem("transactions") || "[]",
+  );
+
+  const recentTransactions = [...transactions]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
+
   return (
     <div className="recent-transactions">
-
       <h3>Recent Transactions</h3>
 
-      <div className="transaction-item">
-        <div>
-          <h4>Amazon</h4>
-          <p>Shopping</p>
-        </div>
+      {recentTransactions.length === 0 ? (
+        <p className="no-recent-transactions">
+          No transactions yet
+        </p>
+      ) : (
+        recentTransactions.map((transaction) => (
+          <div
+            className="transaction-item"
+            key={transaction.id}
+          >
+            <div>
+              <h4>{transaction.category}</h4>
+              <p>
+                {transaction.date
+                  .split("-")
+                  .reverse()
+                  .join("-")}
+              </p>
+            </div>
 
-        <span>- ₹1,200</span>
-      </div>
-
-      <div className="transaction-item">
-        <div>
-          <h4>Salary</h4>
-          <p>Income</p>
-        </div>
-
-        <span className="income">+ ₹50,000</span>
-      </div>
-
-      <div className="transaction-item">
-        <div>
-          <h4>Swiggy</h4>
-          <p>Food</p>
-        </div>
-
-        <span>- ₹450</span>
-      </div>
-
+            <span
+              className={
+                transaction.type === "Income" ? "income" : ""
+              }
+            >
+              {transaction.type === "Income" ? "+ " : "- "}₹
+              {transaction.amount}
+            </span>
+          </div>
+        ))
+      )}
     </div>
   );
 }

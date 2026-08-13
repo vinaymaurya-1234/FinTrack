@@ -7,6 +7,20 @@ import {
 } from "react-icons/fa6";
 
 function StatsCards() {
+  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  const totalIncome = transactions
+    .filter((transaction) => transaction.type === "Income")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+
+  const totalExpense = transactions
+    .filter((transaction) => transaction.type === "Expense")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+
+  const totalBalance = totalIncome - totalExpense;
+
+  const totalSavings = totalBalance;
+
   return (
     <div className="stats-cards">
       <div className="stat-card">
@@ -15,9 +29,9 @@ function StatsCards() {
           <FaWallet className="card-icon balance" />
         </div>
 
-        <h2>₹54,000</h2>
+        <h2>₹{totalBalance.toLocaleString("en-IN")}</h2>
 
-        <p className="card-info">+12% this month</p>
+        <p className="card-info">Current balance</p>
       </div>
 
       <div className="stat-card">
@@ -26,9 +40,9 @@ function StatsCards() {
           <FaArrowTrendUp className="card-icon income" />
         </div>
 
-        <h2>₹80,000</h2>
+        <h2>₹{totalIncome.toLocaleString("en-IN")}</h2>
 
-        <p className="card-info">Salary & Freelance</p>
+        <p className="card-info">Total income</p>
       </div>
 
       <div className="stat-card">
@@ -37,9 +51,9 @@ function StatsCards() {
           <FaArrowTrendDown className="card-icon expense" />
         </div>
 
-        <h2>₹26,000</h2>
+        <h2>₹{totalExpense.toLocaleString("en-IN")}</h2>
 
-        <p className="card-info">-8% this month</p>
+        <p className="card-info">Total expenses</p>
       </div>
 
       <div className="stat-card">
@@ -48,9 +62,9 @@ function StatsCards() {
           <FaPiggyBank className="card-icon saving" />
         </div>
 
-        <h2>₹28,000</h2>
+        <h2>₹{totalSavings.toLocaleString("en-IN")}</h2>
 
-        <p className="card-info">Goal 70%</p>
+        <p className="card-info">Available savings</p>
       </div>
     </div>
   );
