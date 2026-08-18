@@ -10,6 +10,8 @@
 
   padding: 24px 18px;
 
+  position: sticky;
+  left: 0;
   top:0;
   z-index:1000;
 

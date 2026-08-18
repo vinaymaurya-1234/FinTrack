@@ -1,77 +1,90 @@
 import { useEffect, useState } from "react";
 import AddTransaction from "../Components/transaction/AddTransaction";
 import "./Transactions.css";
+import axios from "axios";
 
 function Transactions() {
-  const [transactions, setTransactions] = useState(() => {
-    const savedTransactions = localStorage.getItem("transactions");
-
-    return savedTransactions
-      ? JSON.parse(savedTransactions)
-      : [
-          {
-            id: 1,
-            category: "🍔 Food",
-            type: "Expense",
-            amount: 450,
-            date: "2026-08-08",
-          },
-        ];
-  });
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [transactions]);
+    const getTransactions = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/transactions",
+        );
+
+        setTransactions(response.data);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+
+    getTransactions();
+  }, []);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(10);
 
-  const handleAddTransaction = (newTransaction) => {
-    setTransactions((prev) => {
-      const updatedTransactions = [
-        ...prev,
-        {
-          ...newTransaction,
-          id: Date.now(),
-        },
-      ];
-
-      return updatedTransactions.sort(
-        (a, b) => new Date(b.date) - new Date(a.date),
+  const handleAddTransaction = async (newTransaction) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/transactions",
+        newTransaction,
       );
-    });
+
+      setTransactions((prev) => {
+        const updatedTransactions = [...prev, response.data];
+
+        return updatedTransactions.sort(
+          (a, b) => new Date(b.date) - new Date(a.date),
+        );
+      });
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    }
   };
 
-  const handleDelete = (id) => {
-    const updatedTransactions = transactions.filter(
-      (transaction) => transaction.id !== id,
-    );
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
 
-    setTransactions(updatedTransactions);
+      setTransactions((prev) =>
+        prev.filter((transaction) => transaction._id !== id),
+      );
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+    }
   };
 
   const handleEditClick = (transaction) => {
     setEditingTransaction(transaction);
   };
 
-  const handleUpdateTransaction = (updatedTransaction) => {
-    setTransactions((prev) => {
-      const updatedTransactions = prev.map((transaction) =>
-        transaction.id === editingTransaction.id
-          ? {
-              ...updatedTransaction,
-              id: editingTransaction.id,
-            }
-          : transaction,
+  const handleUpdateTransaction = async (updatedTransaction) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/transactions/${editingTransaction._id}`,
+        updatedTransaction,
       );
 
-      return updatedTransactions.sort(
-        (a, b) => new Date(b.date) - new Date(a.date),
-      );
-    });
+      setTransactions((prev) => {
+        const updatedTransactions = prev.map((transaction) =>
+          transaction._id === editingTransaction._id
+            ? response.data
+            : transaction,
+        );
 
-    setEditingTransaction(null);
+        return updatedTransactions.sort(
+          (a, b) => new Date(b.date) - new Date(a.date),
+        );
+      });
+
+      setEditingTransaction(null);
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+    }
   };
 
   const filteredTransactions = transactions.filter((transaction) => {
@@ -83,6 +96,16 @@ function Transactions() {
 
     return matchesSearch && matchesFilter;
   });
+
+  const visibleTransactions = filteredTransactions.slice(0, visibleCount);
+
+  const handleViewMore = () => {
+    setVisibleCount((prev) => prev + 10);
+  };
+
+  const handleViewLess = () => {
+    setVisibleCount(10);
+  };
 
   return (
     <div className="transactions-page">
@@ -140,8 +163,8 @@ function Transactions() {
         </div>
 
         <div className="table-body">
-          {filteredTransactions.map((transaction) => (
-            <div className="table-row" key={transaction.id}>
+          {visibleTransactions.map((transaction) => (
+            <div className="table-row" key={transaction._id}>
               <span>{transaction.category}</span>
 
               <span
@@ -155,7 +178,9 @@ function Transactions() {
                 {transaction.amount}
               </span>
 
-              <span>{transaction.date.split("-").reverse().join("-")}</span>
+              <span>
+                {new Date(transaction.date).toLocaleDateString("en-GB")}
+              </span>
 
               <div className="actions">
                 <button
@@ -167,7 +192,7 @@ function Transactions() {
 
                 <button
                   className="delete-btn"
-                  onClick={() => handleDelete(transaction.id)}
+                  onClick={() => handleDelete(transaction._id)}
                 >
                   Delete
                 </button>
@@ -180,6 +205,25 @@ function Transactions() {
           )}
         </div>
       </div>
+
+      {filteredTransactions.length > 10 && (
+        <div className="transaction-pagination">
+          <p>
+            Showing {Math.min(visibleCount, filteredTransactions.length)} of{" "}
+            {filteredTransactions.length} transactions
+          </p>
+
+          <div className="view-buttons">
+            {visibleCount > 10 && (
+              <button onClick={handleViewLess}>↑ View Less</button>
+            )}
+
+            {visibleCount < filteredTransactions.length && (
+              <button onClick={handleViewMore}>View More ↓</button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

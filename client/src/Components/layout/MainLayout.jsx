@@ -18,7 +18,9 @@ function MainLayout() {
       <div className="main-content">
         <Navbar isOpen={isOpen} setIsOpen={setIsOpen} />
 
-        <Outlet />
+        <main className="page-content">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

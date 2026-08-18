@@ -1,29 +1,29 @@
 .main-layout {
   display: flex;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.sidebar-overlay{
-    display:none;
+.sidebar-overlay {
+  display: none;
 }
 
-@media (max-width:768px){
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
 
-.sidebar-overlay{
+    position: fixed;
+    inset: 0;
 
-    display:block;
+    background: rgba(0, 0, 0, 0.35);
 
-    position:fixed;
-
-    inset:0;
-
-    background:rgba(0,0,0,.35);
-
-    z-index:999;
-
-}
-
+    z-index: 999;
+  }
 }
