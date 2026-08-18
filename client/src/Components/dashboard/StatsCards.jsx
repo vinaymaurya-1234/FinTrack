@@ -1,4 +1,6 @@
 import "./StatsCards.css";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   FaWallet,
   FaArrowTrendUp,
@@ -7,7 +9,18 @@ import {
 } from "react-icons/fa6";
 
 function StatsCards() {
-  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/transactions")
+      .then((response) => {
+        setTransactions(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "Income")

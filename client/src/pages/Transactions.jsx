@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import AddTransaction from "../Components/transaction/AddTransaction";
+import { FaEllipsisVertical } from "react-icons/fa6";
 import "./Transactions.css";
 import axios from "axios";
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   useEffect(() => {
     const getTransactions = async () => {
@@ -65,7 +67,7 @@ function Transactions() {
   const handleUpdateTransaction = async (updatedTransaction) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/transactions/${editingTransaction._id}`,
+        `http://10.87.12.94:5000/api/transactions/${editingTransaction._id}`,
         updatedTransaction,
       );
 
@@ -184,18 +186,37 @@ function Transactions() {
 
               <div className="actions">
                 <button
-                  className="edit-btn"
-                  onClick={() => handleEditClick(transaction)}
+                  className="menu-btn"
+                  onClick={() =>
+                    setActiveMenu(
+                      activeMenu === transaction._id ? null : transaction._id,
+                    )
+                  }
                 >
-                  Edit
+                  <FaEllipsisVertical />
                 </button>
 
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(transaction._id)}
-                >
-                  Delete
-                </button>
+                {activeMenu === transaction._id && (
+                  <div className="action-menu">
+                    <button
+                      onClick={() => {
+                        handleEditClick(transaction);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        handleDelete(transaction._id);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}

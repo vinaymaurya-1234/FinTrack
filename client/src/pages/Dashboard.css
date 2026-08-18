@@ -13,9 +13,15 @@
 
 .dashboard-header{
     display:flex;
-    justify-content:space-between;
+    justify-content:flex-end;
     align-items:center;
-    margin-bottom:25px;
+    /* margin-bottom:25px; */
+}
+
+.add-transaction-btn {
+  margin-top: 20px;
+  margin-right: 20px;
+  margin-bottom: 10px;
 }
 
 

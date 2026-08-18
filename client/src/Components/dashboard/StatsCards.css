@@ -7,13 +7,13 @@
 .stat-card {
   background: #fff;
   border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  transition: .3s;
+  padding: 18px 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  transition: 0.3s;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
 }
 
 .card-top {
@@ -23,12 +23,14 @@
 }
 
 .card-top h4 {
-  font-size: 16px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
   color: #666;
 }
 
 .card-icon {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .balance {
@@ -48,36 +50,43 @@
 }
 
 .stat-card h2 {
-  margin: 20px 0 10px;
-  font-size: 32px;
+  margin: 14px 0 6px;
+  font-size: 30px;
+  font-family: Arial, sans-serif;
+  font-weight: 300;
 }
 
 .card-info {
+  margin: 0;
   color: #888;
-  font-size: 14px;
+  font-size: 13px;
 }
 
-@media (max-width: 768px){
+/* Mobile */
 
-.stats-cards{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:14px;
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+ .stat-card h2 {
+  margin: 14px 0 6px;
+  font-size: 30px;
+  font-family: Arial, sans-serif;
+  font-weight: 400;
 }
 
-.card{
-    padding:18px;
-    border-radius:16px;
-}
+  .card-top h4 {
+    font-size: 14px;
+  }
 
-.card h3{
-    font-size:14px;
-    margin-bottom:10px;
-}
-
-.card p{
-    font-size:24px;
-    font-weight:700;
-}
-
+  .card-icon {
+    font-size: 19px;
+  }
 }

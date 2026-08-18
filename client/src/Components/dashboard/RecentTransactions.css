@@ -23,8 +23,13 @@
 }
 
 .transaction-item h4 {
-  font-size: 20px;
-  font-weight: 45 0;
+  font-size: 19px;
+  font-weight: 30 0;
+}
+
+.transaction-item h5 {
+  font-size: 15px;
+  font-weight: 30 0;
 }
 
 .transaction-item p {
@@ -48,6 +53,26 @@
 
 }
 
+.recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+.recent-header h3 {
+  margin: 0;
+}
+
+.recent-header button {
+  border: none;
+  background: transparent;
+  color: #5d5ce8;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 
 /* ---------- Mobile ---------- */
 
@@ -68,12 +93,12 @@
 
 .transaction-item{
 
-    padding:14px 0;
+    padding: 4px 0;
 
 }
 
 .transaction-item h4{
-    font-size:20px;
+    font-size: 20px;
 }
 
 .transaction-item p{
@@ -105,7 +130,7 @@
 }
 
 .transaction-item h4{
-    font-size:22px;
+    font-size:17px;
 }
 
 .transaction-item p{

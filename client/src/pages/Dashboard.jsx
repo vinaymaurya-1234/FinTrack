@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import "./Dashboard.css";
 import AddTransaction from "../Components/transaction/AddTransaction.jsx";
 import StatsCards from "../Components/dashboard/StatsCards";
@@ -8,28 +9,23 @@ import RecentTransactions from "../Components/dashboard/RecentTransactions";
 function Dashboard() {
   const [refresh, setRefresh] = useState(0);
 
-  const handleAddTransaction = (newTransaction) => {
-    const savedTransactions = JSON.parse(
-      localStorage.getItem("transactions") || "[]",
-    );
+  const handleAddTransaction = async (newTransaction) => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/transactions",
+        newTransaction,
+      );
 
-    const updatedTransactions = [
-      ...savedTransactions,
-      {
-        ...newTransaction,
-        id: Date.now(),
-      },
-    ].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
-
-    setRefresh((prev) => prev + 1);
+      setRefresh((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    }
   };
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        <h1>Dashboard</h1>
+        {/* <h1>Dashboard</h1> */}
 
         <AddTransaction onSave={handleAddTransaction} />
       </div>
