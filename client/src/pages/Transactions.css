@@ -1,13 +1,18 @@
+/* ========================================
+   MAIN PAGE - DESKTOP / LAPTOP
+======================================== */
+
 .transactions-page {
   padding: 30px;
+  padding-bottom: 50px;
   background: #f5f7fb;
   min-height: calc(100vh - 80px);
-  padding-bottom: 50px;
 }
 
-/* =========================
-   Header
-========================= */
+
+/* ========================================
+   HEADER - DESKTOP / LAPTOP
+======================================== */
 
 .transactions-header {
   display: flex;
@@ -17,54 +22,69 @@
 }
 
 .transactions-header h2 {
+  margin: 0;
   font-size: 30px;
   font-weight: 700;
-  margin: 0;
-  color: #111827;
   line-height: 1;
+  color: #111827;
 }
 
-/* =========================
-   Add Button
-========================= */
+
+/* ========================================
+   ADD BUTTON - DESKTOP / LAPTOP
+======================================== */
 
 .add-btn {
   border: none;
   cursor: pointer;
+
   background: #6d5ef8;
   color: white;
+
   padding: 12px 22px;
   border-radius: 10px;
+
   font-size: 14px;
   font-weight: 600;
-  transition: 0.3s;
+
   white-space: nowrap;
+
+  transition: 0.3s;
 }
 
 .add-btn:hover {
   background: #5b4ce0;
 }
 
-/* =========================
-   Search + Filter
-========================= */
+
+/* ========================================
+   SEARCH + FILTER - DESKTOP / LAPTOP
+======================================== */
 
 .transactions-toolbar {
   margin-top: 28px;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   gap: 20px;
 }
 
 .search-input {
   flex: 1;
+
   padding: 14px 18px;
+
   border: none;
-  border-radius: 12px;
-  background: white;
-  font-size: 15px;
   outline: none;
+
+  border-radius: 12px;
+
+  background: white;
+
+  font-size: 15px;
+
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -75,13 +95,19 @@
 
 .filter-buttons button {
   border: none;
-  background: white;
-  padding: 12px 20px;
-  border-radius: 10px;
   cursor: pointer;
+
+  background: white;
+
+  padding: 12px 20px;
+
+  border-radius: 10px;
+
   font-size: 14px;
   font-weight: 600;
+
   transition: 0.25s;
+
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -95,48 +121,79 @@
   color: white;
 }
 
-/* =========================
-   Transactions Table
-========================= */
+
+/* ========================================
+   TRANSACTIONS TABLE - DESKTOP / LAPTOP
+======================================== */
 
 .transactions-table {
   margin-top: 25px;
+
   background: white;
+
   border-radius: 16px;
+
   overflow: visible;
+
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
 }
 
-/* Table Header */
+
+/* ========================================
+   TABLE HEADER - DESKTOP / LAPTOP
+======================================== */
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1.2fr 1.4fr 70px;
+
+  grid-template-columns:
+    2fr
+    1.2fr
+    1.2fr
+    1.4fr
+    70px;
+
   align-items: center;
+
   padding: 17px 22px;
+
   background: #fafafa;
+
   border-bottom: 1px solid #eeeeee;
 
   font-size: 13px;
   font-weight: 600;
+
   color: #6b7280;
 
   border-radius: 16px 16px 0 0;
 }
 
-/* Table Row */
+
+/* ========================================
+   TRANSACTION ROW - DESKTOP / LAPTOP
+======================================== */
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1.2fr 1.4fr 70px;
+
+  grid-template-columns:
+    2fr
+    1.2fr
+    1.2fr
+    1.4fr
+    70px;
+
   align-items: center;
 
   padding: 18px 22px;
+
   min-height: 64px;
 
   border-bottom: 1px solid #eeeeee;
 
   font-size: 15px;
+
   color: #1f2937;
 
   transition: background 0.2s ease;
@@ -151,9 +208,10 @@
   background: #fafaff;
 }
 
-/* =========================
-   Transaction Type
-========================= */
+
+/* ========================================
+   TRANSACTION TYPE - ALL DEVICES
+======================================== */
 
 .income,
 .expense {
@@ -169,27 +227,36 @@
   color: #dc5a52;
 }
 
-/* Amount */
+
+/* ========================================
+   AMOUNT - ALL DEVICES
+======================================== */
 
 .amount {
   font-weight: 600;
   color: #374151;
 }
 
-/* =========================
-   Actions Menu
-========================= */
+
+/* ========================================
+   THREE DOT MENU - DESKTOP / LAPTOP
+======================================== */
 
 .actions {
   position: relative;
+
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .menu-btn {
   width: 34px;
   height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   border: none;
   border-radius: 8px;
@@ -200,11 +267,8 @@
   line-height: 1;
 
   cursor: pointer;
-  color: #6b7280;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: #6b7280;
 
   transition: 0.2s;
 }
@@ -214,7 +278,10 @@
   color: #6d5ef8;
 }
 
-/* Dropdown */
+
+/* ========================================
+   ACTION DROPDOWN - ALL DEVICES
+======================================== */
 
 .action-menu {
   position: absolute;
@@ -264,26 +331,32 @@
   color: #dc5a52;
 }
 
-/* =========================
-   Pagination
-========================= */
+
+/* ========================================
+   PAGINATION - DESKTOP / LAPTOP
+======================================== */
 
 .transaction-pagination {
   display: flex;
+
   justify-content: space-between;
   align-items: center;
 
   margin-top: 20px;
+
   padding: 18px 20px;
 
-  background: #ffffff;
+  background: white;
+
   border: 1px solid #e5e7eb;
   border-radius: 14px;
 }
 
 .transaction-pagination p {
   margin: 0;
+
   color: #6b7280;
+
   font-size: 14px;
 }
 
@@ -294,8 +367,9 @@
 
 .view-buttons button {
   border: none;
+
   background: #6d5ef8;
-  color: #ffffff;
+  color: white;
 
   padding: 10px 18px;
 
@@ -311,12 +385,15 @@
 
 .view-buttons button:hover {
   background: #5948e8;
+
   transform: translateY(-2px);
 }
 
-/* =========================
-   Tablet
-========================= */
+
+/* ========================================
+   TABLET VIEW
+   Screen width: 769px - 900px
+======================================== */
 
 @media (max-width: 900px) {
 
@@ -326,173 +403,243 @@
 
   .table-header,
   .table-row {
-    grid-template-columns: 1.7fr 1.2fr 1.2fr 1.3fr 60px;
+    grid-template-columns:
+      1.7fr
+      1.2fr
+      1.2fr
+      1.3fr
+      60px;
+
     padding-left: 18px;
     padding-right: 18px;
   }
 
 }
 
+
 /* =========================
-   Mobile
+   MOBILE VIEW ONLY
 ========================= */
+
+/* =================================
+   MOBILE VIEW - CLEAN & COMPACT
+================================= */
 
 @media (max-width: 768px) {
 
   .transactions-page {
-    padding: 16px;
+    padding: 18px;
+    padding-top: 28px;
   }
 
-  /* Header */
+  /* =============================
+     HEADER
+  ============================== */
 
   .transactions-header {
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
   }
 
   .transactions-header h2 {
-    font-size: 25px;
-    line-height: 1.2;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+    white-space: nowrap;
   }
 
   .add-btn {
-    padding: 10px 14px;
-    font-size: 13px;
+    padding: 12px 18px;
+    font-size: 14px;
     border-radius: 10px;
+    white-space: nowrap;
   }
 
-  /* Toolbar */
+
+  /* =============================
+     SEARCH + FILTER
+  ============================== */
 
   .transactions-toolbar {
-    margin-top: 26px;
+    margin-top: 22px;
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
+    gap: 12px;
   }
 
   .search-input {
     width: 100%;
     box-sizing: border-box;
-    padding: 14px 16px;
+    padding: 13px 16px;
+    font-size: 14px;
+    border-radius: 12px;
   }
 
   .filter-buttons {
-    justify-content: space-between;
-    gap: 10px;
+    display: flex;
+    gap: 8px;
+    width: 100%;
   }
 
   .filter-buttons button {
     flex: 1;
-    padding: 11px 8px;
+    padding: 11px 5px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 
-  /* Hide Desktop Header */
+
+  /* =============================
+     HIDE TABLE HEADER
+  ============================== */
 
   .table-header {
     display: none;
   }
 
+
+  /* =============================
+     TRANSACTION LIST
+  ============================== */
+
   .transactions-table {
-    margin-top: 24px;
-    border-radius: 16px;
+    margin-top: 16px;
+    border-radius: 14px;
     overflow: hidden;
   }
 
-  /* =========================
-     Mobile Transaction Card
-  ========================= */
+
+  /* =============================
+     TRANSACTION ROW
+  ============================== */
 
   .table-row {
     position: relative;
 
     display: grid;
+
     grid-template-columns: 1fr auto;
 
-    gap: 14px 20px;
+    grid-template-areas:
+      "category type"
+      "amount date";
 
-    padding: 20px 18px;
+    column-gap: 12px;
+    row-gap: 8px;
+
+    padding: 14px 16px;
 
     min-height: auto;
 
-    font-size: 15px;
+    font-size: 14px;
   }
 
-  /* Category */
+
+  /* CATEGORY */
 
   .table-row > span:nth-child(1) {
-    font-weight: 600;
-    color: #1f2937;
+    grid-area: category;
 
-    padding-right: 30px;
+    font-size: 15px;
+    font-weight: 600;
+
+    padding-right: 20px;
   }
 
-  /* Type */
+
+  /* TYPE */
 
   .table-row > span:nth-child(2) {
+    grid-area: type;
+
     font-size: 13px;
     font-weight: 600;
 
-    padding-right: 28px;
-
     text-align: right;
+
+    padding-right: 24px;
   }
 
-  /* Amount */
+
+  /* AMOUNT */
 
   .table-row > span:nth-child(3) {
-    font-size: 15px;
+    grid-area: amount;
+
+    font-size: 14px;
     font-weight: 600;
-    color: #374151;
   }
 
-  /* Date */
+
+  /* DATE */
 
   .table-row > span:nth-child(4) {
+    grid-area: date;
+
     font-size: 13px;
 
     color: #6b7280;
 
     text-align: right;
 
-    padding-right: 28px;
+    padding-right: 24px;
   }
 
-  /* Actions */
+
+  /* =============================
+     THREE DOT MENU
+  ============================== */
 
   .actions {
     position: absolute;
 
-    top: 14px;
-    right: 12px;
+    top: 12px;
+    right: 10px;
 
-    width: auto;
-    height: auto;
+    width: 24px;
+    height: 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .menu-btn {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
 
-    font-size: 17px;
+    padding: 0;
 
-    border-radius: 7px;
+    font-size: 16px;
+
+    background: transparent;
   }
 
   .action-menu {
-    top: 34px;
+    top: 28px;
     right: 0;
 
-    width: 125px;
+    width: 120px;
 
     z-index: 1000;
   }
 
-  /* Pagination */
+
+  /* =============================
+     PAGINATION
+  ============================== */
 
   .transaction-pagination {
+    margin-top: 14px;
+
+    padding: 14px;
+
     flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    align-items: stretch;
+
+    gap: 12px;
   }
 
   .view-buttons {
