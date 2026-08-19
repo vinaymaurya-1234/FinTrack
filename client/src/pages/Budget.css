@@ -3,11 +3,12 @@
 ======================================== */
 
 .budget-page {
+  min-height: calc(100vh - 80px);
   padding: 30px;
   padding-bottom: 50px;
   background: #f5f7fb;
-  min-height: calc(100vh - 80px);
   color: #1f2937;
+  box-sizing: border-box;
 }
 
 
@@ -19,52 +20,234 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .budget-top h2 {
   margin: 0;
   font-size: 30px;
   font-weight: 700;
-  color: #111827;
+  color: #1e293b;
 }
 
 .budget-top p {
   margin: 6px 0 0;
-  color: #6b7280;
   font-size: 14px;
+  color: #64748b;
 }
 
 .budget-top-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
-.add-budget-btn,
-.month-btn {
-  border: none;
-  cursor: pointer;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 12px 18px;
-  transition: 0.25s;
-}
+
+/* ========================================
+   ADD BUDGET BUTTON
+======================================== */
 
 .add-budget-btn {
-  background: #6d5ef8;
-  color: white;
+  border: none;
+  background: #6256d9;
+  color: #ffffff;
+
+  padding: 13px 22px;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition: all 0.25s ease;
+
+  box-shadow: 0 6px 16px rgba(98, 86, 217, 0.2);
 }
 
 .add-budget-btn:hover {
-  background: #5b4ce0;
+  background: #5549c7;
+  transform: translateY(-1px);
 }
 
-.month-btn {
-  background: white;
-  color: #374151;
+.add-budget-btn:active {
+  transform: translateY(0);
+}
+
+
+/* ========================================
+   MONTH SELECTOR
+======================================== */
+
+.month-selector,
+.month-filter {
+  position: relative;
+}
+
+
+/* Main Month Button */
+
+.month-btn,
+.month-selector-btn {
+  min-width: 160px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background: #ffffff;
+
+  color: #334155;
+
+  border: 1px solid #dbe1ea;
+
+  padding: 12px 16px;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition: all 0.2s ease;
+}
+
+.month-btn:hover,
+.month-selector-btn:hover {
+  border-color: #6256d9;
+  color: #6256d9;
+}
+
+
+/* ========================================
+   MONTH DROPDOWN
+======================================== */
+
+.month-dropdown,
+.month-picker,
+.month-menu {
+  position: absolute;
+
+  top: calc(100% + 8px);
+  right: 0;
+
+  width: 240px;
+
+  background: #ffffff;
+
   border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 16px;
+
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12);
+
+  z-index: 100;
+
+  box-sizing: border-box;
+}
+
+
+/* Month / Year Fields */
+
+.month-dropdown label,
+.month-picker label,
+.month-menu label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #64748b;
+}
+
+.month-dropdown select,
+.month-picker select,
+.month-menu select {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: 1px solid #dbe1ea;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #334155;
+
+  font-size: 14px;
+
+  outline: none;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  transition: border 0.2s ease;
+}
+
+.month-dropdown select:focus,
+.month-picker select:focus,
+.month-menu select:focus {
+  border-color: #6256d9;
+}
+
+
+/* If month/year are inside rows */
+
+.month-select-row,
+.year-select-row,
+.month-year-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  margin-bottom: 14px;
+}
+
+
+/* Apply Button */
+
+.apply-month-btn,
+.month-dropdown button,
+.month-picker button {
+  width: 100%;
+
+  margin-top: 4px;
+
+  padding: 10px 14px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #6256d9;
+
+  color: white;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.apply-month-btn:hover,
+.month-dropdown button:hover,
+.month-picker button:hover {
+  background: #5549c7;
 }
 
 
@@ -76,7 +259,13 @@
   margin-top: 28px;
 
   display: grid;
-  grid-template-columns: 1.5fr 0.9fr 1fr 1fr;
+
+  grid-template-columns:
+    minmax(280px, 1.5fr)
+    minmax(220px, 0.9fr)
+    minmax(240px, 1fr)
+    minmax(240px, 1fr);
+
   gap: 20px;
 
   align-items: stretch;
@@ -84,20 +273,30 @@
 
 
 /* ========================================
-   BUDGET PROGRESS
+   COMMON CARD
 ======================================== */
 
 .budget-progress-section,
+.budget-circle,
 .budget-summary,
 .budget-message,
 .budget-insights,
 .budget-plan,
 .recent-spending,
 .goal-suggestion {
-  background: white;
+  background: #ffffff;
+
   border-radius: 18px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06);
+
+  box-sizing: border-box;
 }
+
+
+/* ========================================
+   BUDGET PROGRESS
+======================================== */
 
 .budget-progress-section {
   padding: 24px;
@@ -107,93 +306,118 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .budget-title h3 {
   margin: 0;
+
   font-size: 16px;
+  font-weight: 600;
+
+  color: #1f2937;
 }
 
 .budget-title span {
   font-size: 12px;
-  color: #6b7280;
+
+  color: #64748b;
+
+  white-space: nowrap;
 }
 
 .budget-progress-section h1 {
-  margin: 25px 0 4px;
+  margin: 28px 0 5px;
+
   font-size: 34px;
-  color: #111827;
+  font-weight: 700;
+
+  color: #1e293b;
 }
 
 .budget-label {
   margin: 0;
-  color: #6b7280;
+
+  color: #64748b;
+
   font-size: 13px;
 }
 
 .budget-progress-bar {
   width: 100%;
+
   height: 10px;
-  background: #eeeefd;
-  border-radius: 20px;
+
   margin-top: 24px;
+
+  background: #ecebff;
+
+  border-radius: 20px;
+
   overflow: hidden;
 }
 
 .budget-progress-fill {
   height: 100%;
-  background: #6d5ef8;
-  border-radius: 20px;
+
+  background: linear-gradient(
+    90deg,
+    #6256d9,
+    #7468e8
+  );
+
+  border-radius: inherit;
+
   transition: width 0.4s ease;
 }
 
 .budget-progress-info {
   margin-top: 10px;
+
   display: flex;
   justify-content: space-between;
+  gap: 10px;
+
   font-size: 13px;
 }
 
 .budget-progress-info span:first-child {
-  color: #6d5ef8;
+  color: #6256d9;
   font-weight: 600;
 }
 
 .budget-progress-info span:last-child {
-  color: #22a55b;
+  color: #2f8f5b;
   font-weight: 600;
 }
 
 
 /* ========================================
-   BUDGET USAGE CIRCLE
+   BUDGET CIRCLE
 ======================================== */
 
 .budget-circle {
-  background: #ffffff;
-  border-radius: 18px;
-  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06);
-
-  min-height: 252px;
-
   display: flex;
+
   align-items: center;
   justify-content: center;
+
+  min-height: 220px;
 }
 
 .circle-content {
   width: 140px;
   height: 140px;
-  border-radius: 50%;
+
+  position: relative;
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
 
-  position: relative;
-  transition: background 0.4s ease;
+  border-radius: 50%;
 }
 
 .circle-content::before {
@@ -201,35 +425,33 @@
 
   position: absolute;
 
-  width: 118px;
-  height: 118px;
-
-  border-radius: 50%;
+  width: 110px;
+  height: 110px;
 
   background: #ffffff;
+
+  border-radius: 50%;
 }
 
 .circle-content h2,
 .circle-content span {
   position: relative;
+
   z-index: 1;
 }
 
 .circle-content h2 {
-  margin: 0 0 4px;
+  margin: 0;
 
-  color: #1f2937;
+  font-size: 28px;
 
-  font-size: 30px;
-  font-weight: 700;
+  color: #1e293b;
 }
 
 .circle-content span {
-  font-size: 12px;
+  font-size: 11px;
 
-  color: #6b7280;
-
-  line-height: 1.4;
+  color: #64748b;
 }
 
 
@@ -242,52 +464,66 @@
 }
 
 .budget-summary h3 {
-  margin: 0 0 20px;
+  margin: 0 0 22px;
+
   font-size: 16px;
+
+  color: #1f2937;
 }
 
 .summary-box {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+
+  gap: 20px;
 }
 
 .summary-row {
   display: flex;
+
   justify-content: space-between;
   align-items: center;
+
+  gap: 10px;
 
   font-size: 13px;
 }
 
 .summary-row span {
   display: flex;
+
   align-items: center;
+
   gap: 8px;
 
-  color: #6b7280;
+  color: #64748b;
 }
 
 .summary-row strong {
   color: #1f2937;
+
+  white-space: nowrap;
 }
 
 .dot {
   width: 8px;
   height: 8px;
+
   border-radius: 50%;
+
+  flex-shrink: 0;
 }
 
 .purple {
-  background: #6d5ef8;
+  background: #6256d9;
 }
 
 .pink {
-  background: #ef6c91;
+  background: #e66b8c;
 }
 
 .green {
-  background: #22a55b;
+  background: #2f8f5b;
 }
 
 
@@ -300,32 +536,34 @@
 
   display: flex;
   flex-direction: column;
+
   justify-content: center;
 }
 
 .wallet-icon {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  background: #f0eeff;
+  background: #f0efff;
 
-  border-radius: 12px;
+  border-radius: 14px;
 
-  font-size: 20px;
+  font-size: 21px;
 }
 
 .budget-message p {
   margin: 18px 0 0;
 
-  color: #4b5563;
+  color: #475569;
 
   font-size: 14px;
 
-  line-height: 1.7;
+  line-height: 1.8;
 
   font-style: italic;
 }
@@ -339,7 +577,9 @@
   margin-top: 24px;
 
   display: grid;
-  grid-template-columns: 2fr 1fr;
+
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+
   gap: 24px;
 }
 
@@ -347,7 +587,10 @@
 .right-content {
   display: flex;
   flex-direction: column;
+
   gap: 24px;
+
+  min-width: 0;
 }
 
 
@@ -361,22 +604,26 @@
 
 .budget-insights h3 {
   margin: 0 0 20px;
+
   font-size: 17px;
 }
 
 .insight-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
   gap: 16px;
 }
 
 .insight {
   display: flex;
+
   gap: 12px;
 
   padding: 16px;
 
-  background: #fafafa;
+  background: #fafbfc;
 
   border-radius: 12px;
 }
@@ -388,6 +635,7 @@
   flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -398,21 +646,22 @@
 
 .insight-icon.success {
   background: #eafaf0;
-  color: #22a55b;
+  color: #2f8f5b;
 }
 
 .insight-icon.warning {
   background: #fff5e6;
-  color: #f59e0b;
+  color: #e99a20;
 }
 
 .insight-icon.info {
-  background: #f0eeff;
-  color: #6d5ef8;
+  background: #f0efff;
+  color: #6256d9;
 }
 
 .insight h4 {
   margin: 0;
+
   font-size: 14px;
 }
 
@@ -420,9 +669,10 @@
   margin: 5px 0 0;
 
   font-size: 12px;
-  line-height: 1.5;
 
-  color: #6b7280;
+  line-height: 1.6;
+
+  color: #64748b;
 }
 
 
@@ -432,25 +682,32 @@
 
 .section-header {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
+
+  gap: 12px;
 }
 
 .section-header h3 {
   margin: 0;
+
   font-size: 17px;
 }
 
 .section-header button {
   border: none;
+
   background: transparent;
 
-  color: #6d5ef8;
+  color: #6256d9;
 
   font-size: 13px;
   font-weight: 600;
 
   cursor: pointer;
+
+  white-space: nowrap;
 }
 
 
@@ -460,10 +717,14 @@
 
 .budget-plan {
   padding: 24px;
+
+  overflow-x: auto;
 }
 
 .budget-table {
   margin-top: 20px;
+
+  min-width: 650px;
 }
 
 .budget-table-header,
@@ -486,25 +747,27 @@
 .budget-table-header {
   padding: 12px 10px;
 
+  border-bottom: 1px solid #eef0f4;
+
   font-size: 12px;
   font-weight: 600;
 
-  color: #9ca3af;
-
-  border-bottom: 1px solid #eeeeee;
+  color: #94a3b8;
 }
 
 .budget-row {
   padding: 16px 10px;
 
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f1f3f6;
 
   font-size: 13px;
 }
 
 .category-info {
   display: flex;
+
   align-items: center;
+
   gap: 10px;
 }
 
@@ -512,7 +775,10 @@
   width: 38px;
   height: 38px;
 
+  flex-shrink: 0;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -523,6 +789,7 @@
 
 .category-info h4 {
   margin: 0;
+
   font-size: 13px;
 }
 
@@ -531,25 +798,28 @@
 
   font-size: 11px;
 
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .progress-column {
   display: flex;
+
   flex-direction: column;
+
   gap: 6px;
 }
 
 .progress-column span {
   font-size: 11px;
-  color: #6b7280;
+
+  color: #64748b;
 }
 
 .small-progress {
-  height: 6px;
   width: 100%;
+  height: 6px;
 
-  background: #eeeeee;
+  background: #edf0f4;
 
   border-radius: 10px;
 
@@ -559,40 +829,52 @@
 .small-progress div {
   height: 100%;
 
-  background: #6d5ef8;
+  background: #6256d9;
 
-  border-radius: 10px;
+  border-radius: inherit;
 }
 
 .row-menu {
   border: none;
+
   background: transparent;
 
   font-size: 18px;
 
-  cursor: pointer;
+  color: #94a3b8;
 
-  color: #9ca3af;
+  cursor: pointer;
 }
 
-.add-category-btn {
-  margin-top: 20px;
 
+/* ========================================
+   ADD CATEGORY BUTTON
+======================================== */
+
+.add-category-btn {
   width: 100%;
+
+  margin-top: 20px;
 
   padding: 12px;
 
-  border: 1px dashed #c9c5ff;
+  border: 1px dashed #bcb7ff;
 
   background: #fafaff;
 
-  color: #6d5ef8;
+  color: #6256d9;
 
   border-radius: 10px;
 
+  font-weight: 600;
+
   cursor: pointer;
 
-  font-weight: 600;
+  transition: 0.2s;
+}
+
+.add-category-btn:hover {
+  background: #f2f1ff;
 }
 
 
@@ -606,12 +888,15 @@
 
 .spending-item {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
+  gap: 12px;
+
   padding: 16px 0;
 
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid #eef0f4;
 }
 
 .spending-item:last-child {
@@ -620,39 +905,50 @@
 
 .spending-left {
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
+  min-width: 0;
 }
 
 .spending-icon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
   background: #f5f4ff;
 
-  border-radius: 10px;
+  border-radius: 11px;
 }
 
 .spending-item h4 {
   margin: 0;
+
   font-size: 13px;
 }
 
 .spending-item p {
   margin: 4px 0 0;
 
-  color: #9ca3af;
-
   font-size: 11px;
+
+  color: #94a3b8;
 }
 
 .spending-item strong {
-  color: #dc5a52;
+  color: #d75a52;
+
   font-size: 13px;
+
+  white-space: nowrap;
 }
 
 
@@ -664,15 +960,16 @@
   padding: 24px;
 
   display: flex;
+
   gap: 16px;
 
   background: linear-gradient(
     135deg,
-    #6d5ef8,
-    #8b7fff
+    #6256d9,
+    #8378f0
   );
 
-  color: white;
+  color: #ffffff;
 }
 
 .goal-icon {
@@ -682,6 +979,7 @@
   flex-shrink: 0;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -689,11 +987,12 @@
 
   border-radius: 12px;
 
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .goal-suggestion h3 {
   margin: 0;
+
   font-size: 16px;
 }
 
@@ -710,8 +1009,9 @@
 .goal-suggestion button {
   border: none;
 
-  background: white;
-  color: #6d5ef8;
+  background: #ffffff;
+
+  color: #6256d9;
 
   padding: 9px 14px;
 
@@ -725,18 +1025,221 @@
 
 
 /* ========================================
-   LARGE LAPTOP
+   BUDGET MODAL
 ======================================== */
 
-@media (max-width: 1300px) {
-  .budget-overview {
-    grid-template-columns: 1.3fr 0.8fr 1fr;
-  }
+.budget-modal-overlay {
+  position: fixed;
 
-  .budget-message {
-    grid-column: span 3;
-    min-height: 170px;
-  }
+  inset: 0;
+
+  padding: 16px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.5);
+
+  z-index: 1000;
+
+  box-sizing: border-box;
+}
+
+.budget-modal {
+  width: 100%;
+  max-width: 430px;
+
+  max-height: calc(100vh - 32px);
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  padding: 30px;
+
+  border-radius: 18px;
+
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.22);
+
+  box-sizing: border-box;
+}
+
+.budget-modal h2 {
+  margin: 0 0 10px;
+
+  font-size: 24px;
+
+  color: #1e293b;
+}
+
+.budget-modal p {
+  margin: 0 0 22px;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+.budget-modal input,
+.budget-modal select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 13px 14px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #dbe1ea;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #334155;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition: border 0.2s ease;
+}
+
+.budget-modal input:focus,
+.budget-modal select:focus {
+  border-color: #6256d9;
+
+  box-shadow: 0 0 0 3px rgba(98, 86, 217, 0.1);
+}
+
+
+/* ========================================
+   MODAL BUTTONS
+======================================== */
+
+.modal-buttons {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  margin-top: 10px;
+}
+
+.cancel-btn,
+.save-budget-btn {
+  border: none;
+
+  padding: 12px 20px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.cancel-btn {
+  background: #f1f3f7;
+
+  color: #475569;
+}
+
+.cancel-btn:hover {
+  background: #e6e9ef;
+}
+
+.save-budget-btn {
+  background: #6256d9;
+
+  color: #ffffff;
+}
+
+.save-budget-btn:hover {
+  background: #5549c7;
+}
+
+
+/* ========================================
+   CATEGORY MODAL
+======================================== */
+
+.category-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  padding: 16px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.5);
+
+  z-index: 1000;
+
+  box-sizing: border-box;
+}
+
+.category-modal {
+  width: 100%;
+  max-width: 430px;
+
+  background: #ffffff;
+
+  padding: 30px;
+
+  border-radius: 18px;
+
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.22);
+
+  box-sizing: border-box;
+}
+
+.category-modal h2 {
+  margin: 0 0 10px;
+
+  color: #1e293b;
+}
+
+.category-modal p {
+  margin-bottom: 22px;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+.category-modal input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 13px 14px;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #dbe1ea;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+.category-modal input:focus {
+  border-color: #6256d9;
 }
 
 
@@ -744,36 +1247,42 @@
    TABLET
 ======================================== */
 
-@media (max-width: 1100px) {
-  .budget-overview {
-    grid-template-columns: 1fr 1fr;
-  }
+@media (max-width: 1200px) {
 
-  .budget-message {
-    grid-column: auto;
+  .budget-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .budget-content {
     grid-template-columns: 1fr;
   }
 
-  .budget-circle {
-    min-height: 230px;
+  .right-content {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    align-items: start;
   }
 }
 
 
-/* ========================================
-   SMALL TABLET
-======================================== */
-
 @media (max-width: 900px) {
+
   .budget-page {
     padding: 24px;
   }
 
-  .budget-overview {
-    gap: 18px;
+  .budget-top {
+    align-items: flex-start;
+  }
+
+  .budget-content {
+    gap: 20px;
+  }
+
+  .right-content {
+    grid-template-columns: 1fr;
   }
 
   .insight-list {
@@ -787,37 +1296,61 @@
 ======================================== */
 
 @media (max-width: 768px) {
+
   .budget-page {
-    padding: 16px;
-    padding-bottom: 32px;
+    padding: 18px 16px 30px;
   }
 
   .budget-top {
     flex-direction: column;
-    align-items: flex-start;
+
+    align-items: stretch;
+
     gap: 18px;
   }
 
   .budget-top h2 {
-    font-size: 28px;
+    font-size: 27px;
+  }
+
+  .budget-top p {
+    font-size: 13px;
   }
 
   .budget-top-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+
+    align-items: stretch;
   }
 
   .add-budget-btn,
-  .month-btn {
+  .month-btn,
+  .month-selector-btn {
+    flex: 1;
+
+    min-width: 0;
+
+    justify-content: center;
+
+    padding: 12px 10px;
+
+    font-size: 13px;
+  }
+
+  .month-dropdown,
+  .month-picker,
+  .month-menu {
     width: 100%;
-    padding: 12px;
+
+    right: 0;
   }
 
   .budget-overview {
-    grid-template-columns: 1fr;
-    gap: 16px;
     margin-top: 20px;
+
+    grid-template-columns: 1fr;
+
+    gap: 16px;
   }
 
   .budget-progress-section,
@@ -827,27 +1360,21 @@
   .budget-plan,
   .recent-spending,
   .goal-suggestion {
-    border-radius: 16px;
+    padding: 20px;
   }
 
   .budget-circle {
-    min-height: 220px;
+    min-height: 210px;
   }
 
-  .circle-content {
-    width: 140px;
-    height: 140px;
-  }
-
-  .circle-content::before {
-    width: 110px;
-    height: 110px;
+  .budget-progress-section h1 {
+    font-size: 32px;
   }
 
   .budget-content {
-    grid-template-columns: 1fr;
-    gap: 16px;
     margin-top: 16px;
+
+    gap: 16px;
   }
 
   .left-content,
@@ -855,20 +1382,27 @@
     gap: 16px;
   }
 
-  .insight-list {
-    grid-template-columns: 1fr;
-  }
-
-  .budget-plan {
-    overflow-x: auto;
-  }
-
   .budget-table {
     min-width: 650px;
   }
 
-  .goal-suggestion {
-    flex-direction: column;
+  .budget-modal {
+    padding: 24px 20px;
+  }
+
+  .category-modal {
+    padding: 24px 20px;
+  }
+
+  .modal-buttons {
+    width: 100%;
+  }
+
+  .cancel-btn,
+  .save-budget-btn {
+    flex: 1;
+
+    padding: 12px 10px;
   }
 }
 
@@ -878,24 +1412,35 @@
 ======================================== */
 
 @media (max-width: 480px) {
+
   .budget-page {
-    padding: 14px;
-  }
-
-  .budget-top h2 {
-    font-size: 26px;
-  }
-
-  .budget-top p {
-    font-size: 13px;
+    padding: 16px 12px 25px;
   }
 
   .budget-top-actions {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .add-budget-btn,
+  .month-btn,
+  .month-selector-btn {
+    width: 100%;
+  }
+
+  .budget-title {
+    align-items: flex-start;
+
+    flex-direction: column;
   }
 
   .budget-progress-section h1 {
+    margin-top: 20px;
+
     font-size: 30px;
+  }
+
+  .budget-progress-info {
+    font-size: 12px;
   }
 
   .circle-content {
@@ -908,11 +1453,16 @@
     height: 102px;
   }
 
-  .circle-content h2 {
-    font-size: 27px;
+  .goal-suggestion {
+    flex-direction: column;
   }
 
-  .summary-row {
-    font-size: 12px;
+  .spending-item {
+    align-items: flex-start;
+  }
+
+  .budget-modal h2,
+  .category-modal h2 {
+    font-size: 21px;
   }
 }

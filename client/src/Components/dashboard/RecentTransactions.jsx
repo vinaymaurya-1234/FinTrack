@@ -3,19 +3,25 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./RecentTransactions.css";
 
-function RecentTransactions() {
+function RecentTransactions({refresh}) {
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/transactions")
-      .then((response) => {
-        setTransactions(response.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
+  const token = localStorage.getItem("token");
+
+  axios
+    .get("http://localhost:5000/api/transactions", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((response) => {
+      setTransactions(response.data);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}, [refresh]);
 
   const navigate = useNavigate();
 

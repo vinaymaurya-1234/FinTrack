@@ -11,9 +11,16 @@ function Dashboard() {
 
   const handleAddTransaction = async (newTransaction) => {
     try {
+      const token = localStorage.getItem("token");
+
       await axios.post(
         "http://localhost:5000/api/transactions",
         newTransaction,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       setRefresh((prev) => prev + 1);

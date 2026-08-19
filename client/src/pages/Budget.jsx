@@ -16,6 +16,21 @@ function Budget() {
   const [transactions, setTransactions] = useState([]);
   const [budgetCategories, setBudgetCategories] = useState([]);
 
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(
+    new Date().getMonth(),
+  );
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const selectedMonth = new Date(
+    selectedYear,
+    selectedMonthIndex,
+  ).toLocaleString("en-US", {
+    month: "long",
+  });
+
   // Current month
   const currentDate = new Date();
 
@@ -41,8 +56,8 @@ function Budget() {
   // Current + next month
   const budgetPeriods = [
     {
-      month: currentMonth,
-      year: currentYear,
+      month: selectedMonth,
+      year: selectedYear,
       label: `${currentMonth} ${currentYear}`,
     },
     {
@@ -56,27 +71,29 @@ function Budget() {
   const fetchBudget = async () => {
     try {
       const token = localStorage.getItem("token");
-
       if (!token) return;
-
       const response = await fetch(
-        `http://localhost:5000/api/budgets?month=${currentMonth}&year=${currentYear}`,
+        `http://localhost:5000/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         },
       );
-
       const data = await response.json();
-
       if (response.ok) {
-        setBudget(data);
+        setBudget(data.budget || data);
+      } else {
+        setBudget(null);
       }
     } catch (error) {
       console.error("Error fetching budget:", error);
+      setBudget(null);
     }
   };
+  useEffect(() => {
+    fetchBudget();
+  }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchBudget();
@@ -119,7 +136,7 @@ function Budget() {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:5000/api/budget-categories?month=${currentMonth}&year=${currentYear}`,
+        `http://localhost:5000/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -141,20 +158,19 @@ function Budget() {
 
   useEffect(() => {
     fetchBudgetCategories();
-  }, [currentMonth, currentYear]);
+  }, [selectedMonth, selectedYear]);
 
   // Current month transactions
-  const currentMonthTransactions = transactions.filter((transaction) => {
+  const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
-
     return (
-      transactionDate.getMonth() === currentDate.getMonth() &&
-      transactionDate.getFullYear() === currentDate.getFullYear()
+      transactionDate.getMonth() === selectedMonthIndex &&
+      transactionDate.getFullYear() === selectedYear
     );
   });
 
   // Total expenses
-  const totalSpent = currentMonthTransactions
+  const totalSpent = selectedMonthTransactions
     .filter((transaction) => transaction.type === "Expense")
     .reduce((total, transaction) => {
       return total + Number(transaction.amount);
@@ -253,7 +269,7 @@ function Budget() {
           body: JSON.stringify({
             category: categoryName,
             amount: Number(categoryAmount),
-            month: currentMonth,
+            month: selectedMonth,
             year: currentYear,
           }),
         },
@@ -280,7 +296,7 @@ function Budget() {
 
   // Get spending for a category
   const getCategorySpent = (category) => {
-    return currentMonthTransactions
+    return selectedMonthTransactions
       .filter(
         (transaction) =>
           transaction.type === "Expense" &&
@@ -319,7 +335,74 @@ function Budget() {
             + Add Budget
           </button>
 
-          <button className="month-btn">📅 This Month</button>
+          <div className="month-selector">
+            <button
+              className="month-btn"
+              onClick={() => setShowMonthPicker(!showMonthPicker)}
+            >
+              📅 {selectedMonth} {selectedYear} ▼
+            </button>
+
+            {showMonthPicker && (
+              <div className="month-picker-dropdown">
+                <div className="picker-group">
+                  <label>Month</label>
+
+                  <select
+                    value={selectedMonthIndex}
+                    onChange={(e) =>
+                      setSelectedMonthIndex(Number(e.target.value))
+                    }
+                  >
+                    {[
+                      "January",
+                      "February",
+                      "March",
+                      "April",
+                      "May",
+                      "June",
+                      "July",
+                      "August",
+                      "September",
+                      "October",
+                      "November",
+                      "December",
+                    ].map((month, index) => (
+                      <option key={month} value={index}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="picker-group">
+                  <label>Year</label>
+
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  >
+                    {Array.from({ length: 11 }, (_, index) => {
+                      const year = new Date().getFullYear() - 5 + index;
+
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <button
+                  className="apply-month-btn"
+                  onClick={() => setShowMonthPicker(false)}
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -417,7 +500,7 @@ function Budget() {
             <h3>Monthly Budget Progress</h3>
 
             <span>
-              {currentMonth} {currentYear}
+              {selectedMonth} {selectedYear}
             </span>
           </div>
 
@@ -627,7 +710,7 @@ function Budget() {
               <button>View All</button>
             </div>
 
-            {currentMonthTransactions
+            {selectedMonthTransactions
               .filter((transaction) => transaction.type === "Expense")
               .slice(0, 4)
               .map((transaction) => (

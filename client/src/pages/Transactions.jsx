@@ -8,11 +8,20 @@ function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [activeMenu, setActiveMenu] = useState(null);
 
+  const token = localStorage.getItem("token");
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
   useEffect(() => {
     const getTransactions = async () => {
       try {
         const response = await axios.get(
           "http://localhost:5000/api/transactions",
+          config,
         );
 
         setTransactions(response.data);
@@ -34,6 +43,7 @@ function Transactions() {
       const response = await axios.post(
         "http://localhost:5000/api/transactions",
         newTransaction,
+        config,
       );
 
       setTransactions((prev) => {
@@ -50,7 +60,10 @@ function Transactions() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+      await axios.delete(
+        `http://localhost:5000/api/transactions/${id}`,
+        config,
+      );
 
       setTransactions((prev) =>
         prev.filter((transaction) => transaction._id !== id),
@@ -67,8 +80,9 @@ function Transactions() {
   const handleUpdateTransaction = async (updatedTransaction) => {
     try {
       const response = await axios.put(
-        `http://10.87.12.94:5000/api/transactions/${editingTransaction._id}`,
+        `http://localhost:5000/api/transactions/${editingTransaction._id}`,
         updatedTransaction,
+        config,
       );
 
       setTransactions((prev) => {

@@ -8,19 +8,25 @@ import {
   FaPiggyBank,
 } from "react-icons/fa6";
 
-function StatsCards() {
+function StatsCards({refresh}) {
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     axios
-      .get("http://localhost:5000/api/transactions")
+      .get("http://localhost:5000/api/transactions", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         setTransactions(response.data);
       })
       .catch((error) => {
         console.log(error);
       });
-  }, []);
+  }, [refresh]);
 
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "Income")
