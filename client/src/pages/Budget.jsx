@@ -2,11 +2,19 @@ import "./Budget.css";
 import { useState, useEffect } from "react";
 
 function Budget() {
+  // Monthly budget modal
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
+
+  // Category modal
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryAmount, setCategoryAmount] = useState("");
+
   const [budget, setBudget] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [budgetCategories, setBudgetCategories] = useState([]);
 
   // Current month
   const currentDate = new Date();
@@ -44,33 +52,33 @@ function Budget() {
     },
   ];
 
-  // Fetch current month budget
-  useEffect(() => {
-    const fetchBudget = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  // Fetch monthly budget
+  const fetchBudget = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        if (!token) return;
+      if (!token) return;
 
-        const response = await fetch(
-          `http://localhost:5000/api/budgets?month=${currentMonth}&year=${currentYear}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+      const response = await fetch(
+        `http://localhost:5000/api/budgets?month=${currentMonth}&year=${currentYear}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        },
+      );
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok) {
-          setBudget(data);
-        }
-      } catch (error) {
-        console.error("Error fetching budget:", error);
+      if (response.ok) {
+        setBudget(data);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching budget:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchBudget();
   }, [currentMonth, currentYear]);
 
@@ -103,6 +111,38 @@ function Budget() {
     fetchTransactions();
   }, []);
 
+  // Fetch budget categories
+  const fetchBudgetCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) return;
+
+      const response = await fetch(
+        `http://localhost:5000/api/budget-categories?month=${currentMonth}&year=${currentYear}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBudgetCategories(data);
+      } else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching budget categories:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBudgetCategories();
+  }, [currentMonth, currentYear]);
+
   // Current month transactions
   const currentMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
@@ -120,7 +160,7 @@ function Budget() {
       return total + Number(transaction.amount);
     }, 0);
 
-  // Budget
+  // Total monthly budget
   const totalBudget = budget ? Number(budget.amount) : 0;
 
   // Remaining amount
@@ -130,7 +170,7 @@ function Budget() {
   const usedPercentage =
     totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
-  // Save budget
+  // Save monthly budget
   const saveBudget = async () => {
     if (!amount || !selectedPeriod) {
       alert("Please enter amount and select a budget period");
@@ -174,6 +214,8 @@ function Budget() {
         setShowModal(false);
         setAmount("");
         setSelectedPeriod("");
+
+        fetchBudget();
       } else {
         alert(data.message);
       }
@@ -181,6 +223,86 @@ function Budget() {
       console.error(error);
       alert("Something went wrong");
     }
+  };
+
+  // Add budget category
+  const addBudgetCategory = async () => {
+    if (!categoryName || !categoryAmount) {
+      alert("Please enter category name and amount");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login first");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/budget-categories",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            category: categoryName,
+            amount: Number(categoryAmount),
+            month: currentMonth,
+            year: currentYear,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Budget category added successfully!");
+
+        setShowCategoryModal(false);
+        setCategoryName("");
+        setCategoryAmount("");
+
+        fetchBudgetCategories();
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error("Error adding budget category:", error);
+      alert("Something went wrong");
+    }
+  };
+
+  // Get spending for a category
+  const getCategorySpent = (category) => {
+    return currentMonthTransactions
+      .filter(
+        (transaction) =>
+          transaction.type === "Expense" &&
+          transaction.category.toLowerCase() === category.toLowerCase(),
+      )
+      .reduce((total, transaction) => {
+        return total + Number(transaction.amount);
+      }, 0);
+  };
+
+  // Category icon
+  const getCategoryIcon = (category) => {
+    const name = category.toLowerCase();
+
+    if (name.includes("food")) return "🍔";
+    if (name.includes("grocery")) return "🛒";
+    if (name.includes("rent")) return "🏠";
+    if (name.includes("transport")) return "🚕";
+    if (name.includes("medicine")) return "💊";
+    if (name.includes("shopping")) return "🛍️";
+
+    return "📁";
   };
 
   return (
@@ -201,7 +323,7 @@ function Budget() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Monthly Budget Modal */}
       {showModal && (
         <div className="budget-modal-overlay">
           <div className="budget-modal">
@@ -239,6 +361,48 @@ function Budget() {
 
               <button className="save-budget-btn" onClick={saveBudget}>
                 Save Budget
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Category Modal */}
+      {showCategoryModal && (
+        <div className="budget-modal-overlay">
+          <div className="budget-modal">
+            <h2>Add Budget Category</h2>
+
+            <p>Allocate a part of your monthly budget.</p>
+
+            <input
+              type="text"
+              placeholder="Category name"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+            />
+
+            <input
+              type="number"
+              placeholder="Enter category budget"
+              value={categoryAmount}
+              onChange={(e) => setCategoryAmount(e.target.value)}
+            />
+
+            <div className="modal-buttons">
+              <button
+                className="cancel-btn"
+                onClick={() => {
+                  setShowCategoryModal(false);
+                  setCategoryName("");
+                  setCategoryAmount("");
+                }}
+              >
+                Cancel
+              </button>
+
+              <button className="save-budget-btn" onClick={addBudgetCategory}>
+                Add Category
               </button>
             </div>
           </div>
@@ -288,9 +452,9 @@ function Budget() {
                 usedPercentage === 0
                   ? "#eef0f6"
                   : `conic-gradient(
-              #6d5ef8 ${usedPercentage}%,
-              #eef0f6 ${usedPercentage}% 100%
-            )`,
+                      #6d5ef8 ${usedPercentage}%,
+                      #eef0f6 ${usedPercentage}% 100%
+                    )`,
             }}
           >
             <h2>{usedPercentage.toFixed(0)}%</h2>
@@ -345,7 +509,7 @@ function Budget() {
         </div>
       </div>
 
-      {/* Bottom sections */}
+      {/* Bottom Sections */}
       <div className="budget-content">
         <div className="left-content">
           {/* Budget Insights */}
@@ -358,6 +522,7 @@ function Budget() {
 
                 <div>
                   <h4>You're on track!</h4>
+
                   <p>
                     Keep tracking your spending and stay within your budget.
                   </p>
@@ -402,58 +567,53 @@ function Budget() {
                 <span>Category</span>
                 <span>Budget</span>
                 <span>Spent</span>
-                <span>Limit</span>
+                <span>Remaining</span>
                 <span>Progress</span>
                 <span></span>
               </div>
 
-              <BudgetRow
-                icon="🏠"
-                category="Rent"
-                type="Fixed Expense"
-                budget="₹15,000"
-                spent="₹15,000"
-                progress="100%"
-              />
+              {budgetCategories.length > 0 ? (
+                budgetCategories.map((category) => {
+                  const spent = getCategorySpent(category.category);
 
-              <BudgetRow
-                icon="🛒"
-                category="Groceries"
-                type="Variable Expense"
-                budget="₹6,000"
-                spent="₹3,240"
-                progress="54%"
-              />
+                  const categoryBudget = Number(category.amount);
 
-              <BudgetRow
-                icon="🚕"
-                category="Transportation"
-                type="Variable Expense"
-                budget="₹4,000"
-                spent="₹2,350"
-                progress="58%"
-              />
+                  const actualProgress =
+                    categoryBudget > 0 ? (spent / categoryBudget) * 100 : 0;
 
-              <BudgetRow
-                icon="💊"
-                category="Medicine"
-                type="Variable Expense"
-                budget="₹2,000"
-                spent="₹1,780"
-                progress="89%"
-              />
+                  const remaining = categoryBudget - spent;
 
-              <BudgetRow
-                icon="•••"
-                category="Personal & Others"
-                type="Flexible Expense"
-                budget="₹5,000"
-                spent="₹1,430"
-                progress="29%"
-              />
+                  return (
+                    <BudgetRow
+                      key={category._id}
+                      icon={getCategoryIcon(category.category)}
+                      category={category.category}
+                      type="Budget Category"
+                      budget={categoryBudget}
+                      spent={spent}
+                      remaining={remaining}
+                      progress={actualProgress}
+                    />
+                  );
+                })
+              ) : (
+                <p
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                  }}
+                >
+                  No budget categories added yet.
+                </p>
+              )}
             </div>
 
-            <button className="add-category-btn">+ Add Category</button>
+            <button
+              className="add-category-btn"
+              onClick={() => setShowCategoryModal(true)}
+            >
+              + Add Category
+            </button>
           </div>
         </div>
 
@@ -504,7 +664,20 @@ function Budget() {
 
 /* Budget Row */
 
-function BudgetRow({ icon, category, type, budget, spent, progress }) {
+function BudgetRow({
+  icon,
+  category,
+  type,
+  budget,
+  spent,
+  remaining,
+  progress,
+}) {
+  // Bar maximum 100% tak hi rahegi
+  const progressWidth = Math.min(progress, 100);
+
+  const isExceeded = progress > 100;
+
   return (
     <div className="budget-row">
       <div className="category-info">
@@ -516,19 +689,21 @@ function BudgetRow({ icon, category, type, budget, spent, progress }) {
         </div>
       </div>
 
-      <span>{budget}</span>
+      <span>₹{Number(budget).toLocaleString()}</span>
 
-      <span>{spent}</span>
+      <span>₹{Number(spent).toLocaleString()}</span>
 
-      <span>{budget}</span>
+      <span>₹{Number(remaining).toLocaleString()}</span>
 
       <div className="progress-column">
-        <span>{progress}</span>
+        <span>
+          {progress.toFixed(0)}%{isExceeded ? " Exceeded" : ""}
+        </span>
 
         <div className="small-progress">
           <div
             style={{
-              width: progress,
+              width: `${progressWidth}%`,
             }}
           ></div>
         </div>
