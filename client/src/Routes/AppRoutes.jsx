@@ -4,6 +4,7 @@ import Register from "../pages/auth/Register";
 import Dashboard from "../pages/Dashboard";
 import MainLayout from "../Components/layout/Mainlayout";
 import Transactions from "../pages/Transactions";
+import Budget from "../pages/Budget";
 
 function AppRoutes() {
   return (
@@ -15,6 +16,7 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/budget" element={<Budget />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,14 +1,16 @@
 const express = require("express");
 const Transaction = require("../models/Transaction");
+const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 // Add Transaction
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
     const { category, type, amount, date } = req.body;
 
     const newTransaction = await Transaction.create({
+      user: req.user._id,
       category,
       type,
       amount,
@@ -24,10 +26,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get All Transactions
-router.get("/", async (req, res) => {
+// Get All Transactions of logged-in user
+router.get("/", protect, async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({
+    const transactions = await Transaction.find({
+      user: req.user._id,
+    }).sort({
       date: -1,
     });
 
@@ -41,9 +45,18 @@ router.get("/", async (req, res) => {
 });
 
 // Delete Transaction
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   try {
-    await Transaction.findByIdAndDelete(req.params.id);
+    const transaction = await Transaction.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!transaction) {
+      return res.status(404).json({
+        message: "Transaction not found",
+      });
+    }
 
     res.status(200).json({
       message: "Transaction deleted successfully",
@@ -51,30 +64,43 @@ router.delete("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error deleting transaction",
+      error: error.message,
     });
   }
 });
 
 // Update Transaction
-router.put("/:id", async (req, res) => {
+router.put("/:id", protect, async (req, res) => {
   try {
     const { category, type, amount, date } = req.body;
 
-    const updatedTransaction = await Transaction.findByIdAndUpdate(
-      req.params.id,
+    const updatedTransaction = await Transaction.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user._id,
+      },
       {
         category,
         type,
         amount,
         date,
       },
-      { new: true },
+      {
+        new: true,
+      },
     );
+
+    if (!updatedTransaction) {
+      return res.status(404).json({
+        message: "Transaction not found",
+      });
+    }
 
     res.status(200).json(updatedTransaction);
   } catch (error) {
     res.status(500).json({
       message: "Error updating transaction",
+      error: error.message,
     });
   }
 });
