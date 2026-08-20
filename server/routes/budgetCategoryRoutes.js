@@ -5,7 +5,6 @@ const BudgetCategory = require("../models/BudgetCategory");
 const Budget = require("../models/Budget");
 const protect = require("../middleware/authMiddleware");
 
-
 // ADD BUDGET CATEGORY
 router.post("/", protect, async (req, res) => {
   try {
@@ -66,8 +65,7 @@ router.post("/", protect, async (req, res) => {
     );
 
     // Calculate new total
-    const newTotalAllocated =
-      totalAllocated + Number(amount);
+    const newTotalAllocated = totalAllocated + Number(amount);
 
     // Prevent allocation above monthly budget
     if (newTotalAllocated > monthlyBudget.amount) {
@@ -91,7 +89,6 @@ router.post("/", protect, async (req, res) => {
       message: "Budget category added successfully",
       category: newCategory,
     });
-
   } catch (error) {
     res.status(500).json({
       message: "Error adding budget category",
@@ -99,7 +96,6 @@ router.post("/", protect, async (req, res) => {
     });
   }
 });
-
 
 // GET ALL CATEGORIES FOR CURRENT MONTH
 router.get("/", protect, async (req, res) => {
@@ -113,7 +109,6 @@ router.get("/", protect, async (req, res) => {
     }).sort({ createdAt: 1 });
 
     res.status(200).json(categories);
-
   } catch (error) {
     res.status(500).json({
       message: "Error fetching budget categories",
@@ -122,5 +117,28 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
+// DELETE BUDGET CATEGORY
+router.delete("/:id", protect, async (req, res) => {
+  try {
+    const category = await BudgetCategory.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+    if (!category) {
+      return res.status(404).json({
+        message: "Budget category not found",
+      });
+    }
+    await category.deleteOne();
+    res.status(200).json({
+      message: "Budget category deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting budget category",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;

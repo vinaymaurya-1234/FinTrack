@@ -17,6 +17,7 @@ function Budget() {
   const [budgetCategories, setBudgetCategories] = useState([]);
 
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showManageCategories, setShowManageCategories] = useState(false);
 
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(
     new Date().getMonth(),
@@ -160,6 +161,31 @@ function Budget() {
     fetchBudgetCategories();
   }, [selectedMonth, selectedYear]);
 
+  const handleDeleteCategory = async (categoryId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:5000/api/budget-categories/${categoryId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.message || "Failed to delete category");
+        return;
+      }
+      alert("Category deleted successfully");
+      fetchBudgetCategories();
+    } catch (error) {
+      console.error("Delete category error:", error);
+      alert("Something went wrong");
+    }
+  };
+
   // Current month transactions
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
@@ -270,7 +296,7 @@ function Budget() {
             category: categoryName,
             amount: Number(categoryAmount),
             month: selectedMonth,
-            year: currentYear,
+            year: Number(selectedYear),
           }),
         },
       );
@@ -306,20 +332,25 @@ function Budget() {
         return total + Number(transaction.amount);
       }, 0);
   };
+// Category icon
+const getCategoryIcon = (category) => {
+  const name = category.toLowerCase();
 
-  // Category icon
-  const getCategoryIcon = (category) => {
-    const name = category.toLowerCase();
+  if (name.includes("food")) return "🍔";
+  if (name.includes("grocery")) return "🛒";
+  if (name.includes("rent")) return "🏠";
+  if (name.includes("travel")) return "✈️";
+  if (name.includes("transport")) return "🚕";
+  if (name.includes("medical") || name.includes("medicine")) return "💊";
+  if (name.includes("bill") || name.includes("utility")) return "💡";
+  if (name.includes("shopping")) return "🛍️";
+  if (name.includes("fitness") || name.includes("gym")) return "🏋️";
+  if (name.includes("entertainment")) return "🎬";
+  if (name.includes("education")) return "📚";
+  if (name.includes("other")) return "📦";
 
-    if (name.includes("food")) return "🍔";
-    if (name.includes("grocery")) return "🛒";
-    if (name.includes("rent")) return "🏠";
-    if (name.includes("transport")) return "🚕";
-    if (name.includes("medicine")) return "💊";
-    if (name.includes("shopping")) return "🛍️";
-
-    return "📁";
-  };
+  return "📌";
+};
 
   return (
     <div className="budget-page">
@@ -642,7 +673,9 @@ function Budget() {
             <div className="section-header">
               <h3>Your Budget Plan</h3>
 
-              <button>Manage Categories</button>
+              <button onClick={() => setShowManageCategories(true)}>
+                Manage Categories
+              </button>
             </div>
 
             <div className="budget-table">
@@ -741,9 +774,62 @@ function Budget() {
           </div>
         </div>
       </div>
+            {showManageCategories && (
+        <div className="modal-overlay">
+          <div className="manage-category-modal">
+            <div className="manage-category-header">
+              <div>
+                <h3>Manage Categories</h3>
+                <p>
+                  {selectedMonth} {selectedYear}
+                </p>
+              </div>
+
+              <button
+                className="close-btn"
+                onClick={() => setShowManageCategories(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="manage-category-list">
+              {budgetCategories.length === 0 ? (
+                <p className="no-categories">
+                  No categories added for this month.
+                </p>
+              ) : (
+                budgetCategories.map((item) => (
+                  <div
+                    className="manage-category-item"
+                    key={item._id}
+                  >
+                    <div>
+                      <h4>{item.category}</h4>
+                      <p>
+                        ₹{item.amount.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+
+                    <button
+                      className="delete-category-btn"
+                      onClick={() =>
+                        handleDeleteCategory(item._id)
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 /* Budget Row */
 
@@ -768,7 +854,6 @@ function BudgetRow({
 
         <div>
           <h4>{category}</h4>
-          <p>{type}</p>
         </div>
       </div>
 
