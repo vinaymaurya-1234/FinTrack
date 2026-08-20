@@ -1,5 +1,6 @@
 import "./Budget.css";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Budget() {
   // Monthly budget modal
@@ -22,6 +23,8 @@ function Budget() {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(
     new Date().getMonth(),
   );
+
+  const navigate = useNavigate();
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -332,25 +335,52 @@ function Budget() {
         return total + Number(transaction.amount);
       }, 0);
   };
-// Category icon
-const getCategoryIcon = (category) => {
-  const name = category.toLowerCase();
+  // Category icon
+  const getCategoryIcon = (category) => {
+    const name = category.toLowerCase();
 
-  if (name.includes("food")) return "🍔";
-  if (name.includes("grocery")) return "🛒";
-  if (name.includes("rent")) return "🏠";
-  if (name.includes("travel")) return "✈️";
-  if (name.includes("transport")) return "🚕";
-  if (name.includes("medical") || name.includes("medicine")) return "💊";
-  if (name.includes("bill") || name.includes("utility")) return "💡";
-  if (name.includes("shopping")) return "🛍️";
-  if (name.includes("fitness") || name.includes("gym")) return "🏋️";
-  if (name.includes("entertainment")) return "🎬";
-  if (name.includes("education")) return "📚";
-  if (name.includes("other")) return "📦";
+    if (name.includes("food")) return "🍔";
+    if (name.includes("grocery")) return "🛒";
+    if (name.includes("rent")) return "🏠";
+    if (name.includes("travel")) return "✈️";
+    if (name.includes("transport")) return "🚕";
+    if (name.includes("medical") || name.includes("medicine")) return "💊";
+    if (name.includes("bill") || name.includes("utility")) return "💡";
+    if (name.includes("shopping")) return "🛍️";
+    if (name.includes("fitness") || name.includes("gym")) return "🏋️";
+    if (name.includes("entertainment")) return "🎬";
+    if (name.includes("education")) return "📚";
+    if (name.includes("other")) return "📦";
 
-  return "📌";
-};
+    return "📌";
+  };
+
+  const categoryInsights = budgetCategories.map((category) => {
+    const spent = getCategorySpent(category.category);
+    const budget = Number(category.amount);
+    const remaining = budget - spent;
+    const progress = budget > 0 ? (spent / budget) * 100 : 0;
+
+    return {
+      category: category.category,
+      spent,
+      budget,
+      remaining,
+      progress,
+    };
+  });
+
+  const exceededCategories = categoryInsights.filter(
+    (category) => category.progress > 100,
+  );
+
+  const highestSpentCategory = [...categoryInsights].sort(
+    (a, b) => b.spent - a.spent,
+  )[0];
+
+  const highestExceededCategory = [...exceededCategories].sort(
+    (a, b) => b.progress - a.progress,
+  )[0];
 
   return (
     <div className="budget-page">
@@ -631,38 +661,62 @@ const getCategoryIcon = (category) => {
             <h3>Budget Insights</h3>
 
             <div className="insight-list">
+              {/* Overall Budget Status */}
               <div className="insight">
-                <div className="insight-icon success">↗</div>
-
+                <div
+                  className={`insight-icon ${
+                    usedPercentage > 100 ? "warning" : "success"
+                  }`}
+                >
+                  {usedPercentage > 100 ? "!" : "↗"}
+                </div>
                 <div>
-                  <h4>You're on track!</h4>
-
+                  <h4>
+                    {usedPercentage > 100
+                      ? "Budget exceeded!"
+                      : usedPercentage >= 80
+                        ? "Watch out!"
+                        : "You're on track!"}
+                  </h4>
                   <p>
-                    Keep tracking your spending and stay within your budget.
+                    {usedPercentage > 100
+                      ? `You've exceeded your monthly budget by ₹${Math.abs(totalRemaining).toLocaleString("en-IN")}.`
+                      : `You've used ${usedPercentage.toFixed(0)}% of your monthly budget.`}
                   </p>
                 </div>
               </div>
 
+              {/* Category Alert */}
               <div className="insight">
-                <div className="insight-icon warning">⌁</div>
-
+                <div className="insight-icon warning">⚠</div>
                 <div>
-                  <h4>Watch out</h4>
-
+                  <h4>
+                    {exceededCategories.length > 0
+                      ? `${exceededCategories.length} ${
+                          exceededCategories.length === 1
+                            ? "category has"
+                            : "categories have"
+                        } exceeded budget`
+                      : "No category exceeded"}
+                  </h4>
                   <p>
-                    You've used {usedPercentage.toFixed(0)}% of your monthly
-                    budget.
+                    {highestExceededCategory
+                      ? `${highestExceededCategory.category} is ${highestExceededCategory.progress.toFixed(0)}% of its budget.`
+                      : "All your category spending is currently within budget."}
                   </p>
                 </div>
               </div>
 
+              {/* Smart Tip */}
               <div className="insight">
                 <div className="insight-icon info">i</div>
-
                 <div>
                   <h4>Tip for you</h4>
-
-                  <p>Try setting limits for your variable expenses.</p>
+                  <p>
+                    {highestSpentCategory
+                      ? `Your highest spending category is ${highestSpentCategory.category} with ₹${highestSpentCategory.spent.toLocaleString("en-IN")} spent.`
+                      : "Add transactions to start getting personalized insights."}
+                  </p>
                 </div>
               </div>
             </div>
@@ -740,16 +794,18 @@ const getCategoryIcon = (category) => {
             <div className="section-header">
               <h3>Recent Spending</h3>
 
-              <button>View All</button>
+              <button onClick={() => navigate("/transactions")}>
+                View All
+              </button>
             </div>
 
             {selectedMonthTransactions
               .filter((transaction) => transaction.type === "Expense")
-              .slice(0, 4)
+              .slice(0, 6)
               .map((transaction) => (
                 <SpendingItem
                   key={transaction._id}
-                  icon="💸"
+                  icon={getCategoryIcon(transaction.category)}
                   name={transaction.category}
                   category={transaction.category}
                   amount={`- ₹${Number(transaction.amount).toLocaleString()}`}
@@ -774,7 +830,7 @@ const getCategoryIcon = (category) => {
           </div>
         </div>
       </div>
-            {showManageCategories && (
+      {showManageCategories && (
         <div className="modal-overlay">
           <div className="manage-category-modal">
             <div className="manage-category-header">
@@ -800,22 +856,15 @@ const getCategoryIcon = (category) => {
                 </p>
               ) : (
                 budgetCategories.map((item) => (
-                  <div
-                    className="manage-category-item"
-                    key={item._id}
-                  >
+                  <div className="manage-category-item" key={item._id}>
                     <div>
                       <h4>{item.category}</h4>
-                      <p>
-                        ₹{item.amount.toLocaleString("en-IN")}
-                      </p>
+                      <p>₹{item.amount.toLocaleString("en-IN")}</p>
                     </div>
 
                     <button
                       className="delete-category-btn"
-                      onClick={() =>
-                        handleDeleteCategory(item._id)
-                      }
+                      onClick={() => handleDeleteCategory(item._id)}
                     >
                       Delete
                     </button>
@@ -829,7 +878,6 @@ const getCategoryIcon = (category) => {
     </div>
   );
 }
-
 
 /* Budget Row */
 
@@ -864,9 +912,7 @@ function BudgetRow({
       <span>₹{Number(remaining).toLocaleString()}</span>
 
       <div className="progress-column">
-        <span>
-          {progress.toFixed(0)}%{isExceeded ? " Exceeded" : ""}
-        </span>
+        <span>{progress.toFixed(0)}%</span>
 
         <div className="small-progress">
           <div
