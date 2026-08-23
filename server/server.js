@@ -6,6 +6,7 @@ const transactionRoutes = require("./routes/transactionRoutes");
 const budgetRoutes = require("./routes/budgetRoutes");
 const authRoutes = require("./routes/authRoutes");
 const budgetCategoryRoutes = require("./routes/budgetCategoryRoutes")
+const goalRoutes = require("./routes/goalRoutes");
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use("/api/transactions",transactionRoutes);
 app.use("/api/budgets", budgetRoutes);
 app.use("/api/auth", authRoutes)
 app.use("/api/budget-categories", budgetCategoryRoutes);
+app.use("/api/goals", goalRoutes);
 
 // Test route
 app.get("/", (req, res) => {
