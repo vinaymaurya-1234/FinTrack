@@ -1,0 +1,491 @@
+.reports-page {
+  padding: 28px 32px;
+  min-height: 100vh;
+  background: #f8f9fc;
+  color: #1f2937;
+}
+
+/* Header */
+
+.reports-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.reports-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.reports-header p {
+  margin: 6px 0 0;
+  color: #7b8190;
+  font-size: 14px;
+}
+
+.download-report-btn {
+  border: none;
+  background: #6d5ef8;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.download-report-btn:hover {
+  background: #5d4ee8;
+  transform: translateY(-1px);
+}
+
+/* Main Report */
+
+.report-container {
+  background: #ffffff;
+  border: 1px solid #edf0f5;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 5px 20px rgba(31, 41, 55, 0.04);
+}
+
+/* Report Period */
+
+.report-period {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.report-period span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.report-period select {
+  min-width: 150px;
+  padding: 10px 34px 10px 12px;
+  border: 1px solid #e2e5eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.report-period select:focus {
+  border-color: #6d5ef8;
+}
+
+/* Report Heading */
+
+.report-heading {
+  text-align: center;
+  padding: 30px 0 26px;
+}
+
+.report-heading h1 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 700;
+  color: #18202f;
+}
+
+.report-heading span {
+  display: block;
+  margin-top: 7px;
+  color: #6d5ef8;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Summary */
+
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.report-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.summary-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.report-summary-card.income .summary-icon {
+  background: #eaf9ef;
+  color: #2dbb62;
+}
+
+.report-summary-card.expenses .summary-icon {
+  background: #fff0f1;
+  color: #ef5b64;
+}
+
+.report-summary-card.savings .summary-icon {
+  background: #eef0ff;
+  color: #6d5ef8;
+}
+
+.report-summary-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: #7b8190;
+  font-size: 13px;
+}
+
+.report-summary-card strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: #202633;
+}
+
+/* Section Title */
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-title h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #202633;
+}
+
+.section-title p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #858b98;
+}
+
+.section-title > strong {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* Expense Breakdown */
+
+.expense-breakdown {
+  padding: 24px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.expense-breakdown-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 110px 60px;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 0;
+}
+
+.expense-category {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.expense-category > span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.category-icon {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #f0efff;
+  color: #6d5ef8;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.expense-progress {
+  height: 7px;
+  background: #edf0f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.expense-progress-fill {
+  height: 100%;
+  background: #6d5ef8;
+  border-radius: 20px;
+  min-width: 3px;
+  transition: width 0.3s ease;
+}
+
+.expense-breakdown-row > strong {
+  text-align: right;
+  font-size: 14px;
+  color: #303744;
+}
+
+.expense-percentage {
+  text-align: right;
+  font-size: 13px;
+  color: #6d5ef8;
+  font-weight: 600;
+}
+
+.no-report-data {
+  margin: 20px 0;
+  text-align: center;
+  color: #8a909c;
+  font-size: 14px;
+}
+
+/* Savings Rate */
+
+.savings-rate {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  column-gap: 25px;
+  align-items: center;
+  padding: 22px 24px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.savings-rate h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+  color: #303744;
+}
+
+.savings-rate strong {
+  font-size: 24px;
+  color: #2dbb62;
+}
+
+.savings-progress {
+  height: 9px;
+  background: #edf0f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.savings-progress-fill {
+  height: 100%;
+  background: #2dbb62;
+  border-radius: 20px;
+  transition: width 0.3s ease;
+}
+
+.savings-rate p {
+  grid-column: 2;
+  margin: 8px 0 0;
+  color: #7b8190;
+  font-size: 13px;
+}
+
+/* Monthly Overview */
+
+.monthly-overview {
+  padding: 24px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.monthly-chart {
+  height: 230px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 20px 8px 0;
+  border-bottom: 1px solid #e9ebf0;
+}
+
+.monthly-chart-item {
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 40px;
+}
+
+.monthly-chart-item > span {
+  min-height: 18px;
+  font-size: 11px;
+  color: #7b8190;
+  white-space: nowrap;
+}
+
+.chart-bar-container {
+  width: 100%;
+  max-width: 48px;
+  height: 145px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.chart-bar {
+  width: 100%;
+  min-height: 3px;
+  background: #dcd9ff;
+  border-radius: 7px 7px 0 0;
+  transition: height 0.3s ease;
+}
+
+.chart-bar.active {
+  background: #6d5ef8;
+}
+
+.monthly-chart-item small {
+  color: #7b8190;
+  font-size: 11px;
+}
+
+/* Tip */
+
+.report-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #f5f3ff;
+  border-radius: 12px;
+}
+
+.report-tip span {
+  font-size: 20px;
+}
+
+.report-tip p {
+  margin: 0;
+  color: #6259a8;
+  font-size: 13px;
+}
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+  .reports-page {
+    padding: 24px;
+  }
+
+  .expense-breakdown-row {
+    grid-template-columns: 140px 1fr 90px 50px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-page {
+    padding: 18px;
+  }
+
+  .reports-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .reports-header h2 {
+    font-size: 24px;
+  }
+
+  .download-report-btn {
+    padding: 10px 14px;
+  }
+
+  .report-container {
+    padding: 18px;
+  }
+
+  .report-period {
+    flex-wrap: wrap;
+  }
+
+  .report-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .expense-breakdown-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .expense-breakdown-row > strong,
+  .expense-percentage {
+    text-align: left;
+  }
+
+  .savings-rate {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .savings-rate p {
+    grid-column: auto;
+  }
+
+  .monthly-overview {
+    overflow-x: auto;
+  }
+
+  .monthly-chart {
+    min-width: 650px;
+  }
+}
+
+@media (max-width: 500px) {
+  .reports-header {
+    flex-direction: column;
+  }
+
+  .download-report-btn {
+    width: 100%;
+  }
+
+  .report-period select {
+    width: 100%;
+  }
+
+  .report-heading h1 {
+    font-size: 21px;
+  }
+
+  .report-summary-card strong {
+    font-size: 20px;
+  }
+}

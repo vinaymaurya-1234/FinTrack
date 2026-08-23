@@ -55,6 +55,9 @@
   background: #f5f6fa;
 
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .profile-box {
@@ -88,26 +91,23 @@
   color: #777;
 }
 
-.navbar-left{
-    display:flex;
-    align-items:center;
-    gap:18px;
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
-.menu-btn{
+.menu-btn {
+  display: none;
 
-    display:none;
-
-    border:none;
-    background:none;
-    font-size:22px;
-    cursor:pointer;
+  border: none;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
 }
 
-@media (max-width:768px){
-
-.menu-btn{
-    display:block;
-}
-
+@media (max-width: 768px) {
+  .menu-btn {
+    display: block;
+  }
 }
