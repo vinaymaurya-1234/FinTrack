@@ -6,6 +6,7 @@ import MainLayout from "../Components/layout/Mainlayout";
 import Transactions from "../pages/Transactions";
 import Budget from "../pages/Budget";
 import Reports from "../pages/Reports";
+import Profile from "../pages/Profile";
 
 function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ function AppRoutes() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/budget" element={<Budget />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>
