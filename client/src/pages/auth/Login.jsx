@@ -26,31 +26,49 @@ function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message);
+        sessionStorage.setItem("toastMessage", data.message || "Login failed");
+
+        window.dispatchEvent(new Event("toastUpdated"));
         return;
       }
 
-      // Save JWT token
       localStorage.setItem("token", data.token);
-
-      // Save logged-in user
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      alert("Login successful!");
+      sessionStorage.setItem("toastMessage", "Login successful");
 
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong");
+
+      sessionStorage.setItem("toastMessage", "Something went wrong");
+
+      window.dispatchEvent(new Event("toastUpdated"));
     }
   };
 
   return (
     <div className="login-page">
+      {/* LEFT BRANDING */}
       <div className="login-left">
-        <h1 className="logo">FinTrack</h1>
+        <div className="login-brand">
+          <div className="brand-logo">
+            <div className="brand-icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <span className="brand-name">FinTrack</span>
+          </div>
+
+          <div className="brand-line"></div>
+
+          <p className="brand-tagline">Track. Manage. Grow.</p>
+        </div>
       </div>
 
+      {/* RIGHT LOGIN */}
       <div className="login-right">
         <div className="login-card">
           <h2 className="login-title">Welcome Back</h2>

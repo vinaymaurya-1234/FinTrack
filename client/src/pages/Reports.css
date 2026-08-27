@@ -17,7 +17,7 @@
 .reports-header h2 {
   margin: 0;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
 }
 
@@ -25,6 +25,7 @@
   margin: 6px 0 0;
   color: #7b8190;
   font-size: 14px;
+  font-weight: 400;
 }
 
 .download-report-btn {
@@ -66,7 +67,7 @@
 
 .report-period span {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: #4b5563;
 }
 
@@ -78,6 +79,7 @@
   background: #ffffff;
   color: #374151;
   font-size: 14px;
+  font-weight: 400;
   cursor: pointer;
   outline: none;
 }
@@ -96,7 +98,7 @@
 .report-heading h1 {
   margin: 0;
   font-size: 25px;
-  font-weight: 700;
+  font-weight: 600;
   color: #18202f;
 }
 
@@ -105,7 +107,7 @@
   margin-top: 7px;
   color: #6d5ef8;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Summary */
@@ -135,7 +137,6 @@
   justify-content: center;
   border-radius: 12px;
   font-size: 22px;
-  font-weight: 600;
 }
 
 .report-summary-card.income .summary-icon {
@@ -158,11 +159,12 @@
   margin-bottom: 5px;
   color: #7b8190;
   font-size: 13px;
+  font-weight: 400;
 }
 
 .report-summary-card strong {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   color: #202633;
 }
 
@@ -178,17 +180,20 @@
 .section-title h3 {
   margin: 0;
   font-size: 18px;
+  font-weight: 600;
   color: #202633;
 }
 
 .section-title p {
   margin: 5px 0 0;
   font-size: 13px;
+  font-weight: 400;
   color: #858b98;
 }
 
 .section-title > strong {
   font-size: 14px;
+  font-weight: 600;
   color: #4b5563;
 }
 
@@ -231,7 +236,6 @@
   background: #f0efff;
   color: #6d5ef8;
   font-size: 13px;
-  font-weight: 700;
 }
 
 .expense-progress {
@@ -252,14 +256,15 @@
 .expense-breakdown-row > strong {
   text-align: right;
   font-size: 14px;
+  font-weight: 600;
   color: #303744;
 }
 
 .expense-percentage {
   text-align: right;
   font-size: 13px;
+  font-weight: 500;
   color: #6d5ef8;
-  font-weight: 600;
 }
 
 .no-report-data {
@@ -267,6 +272,7 @@
   text-align: center;
   color: #8a909c;
   font-size: 14px;
+  font-weight: 400;
 }
 
 /* Savings Rate */
@@ -285,11 +291,13 @@
 .savings-rate h3 {
   margin: 0 0 5px;
   font-size: 16px;
+  font-weight: 600;
   color: #303744;
 }
 
 .savings-rate strong {
   font-size: 24px;
+  font-weight: 600;
   color: #2dbb62;
 }
 
@@ -312,6 +320,7 @@
   margin: 8px 0 0;
   color: #7b8190;
   font-size: 13px;
+  font-weight: 400;
 }
 
 /* Monthly Overview */
@@ -347,6 +356,7 @@
 .monthly-chart-item > span {
   min-height: 18px;
   font-size: 11px;
+  font-weight: 400;
   color: #7b8190;
   white-space: nowrap;
 }
@@ -374,6 +384,7 @@
 .monthly-chart-item small {
   color: #7b8190;
   font-size: 11px;
+  font-weight: 400;
 }
 
 /* Tip */
@@ -395,6 +406,7 @@
   margin: 0;
   color: #6259a8;
   font-size: 13px;
+  font-weight: 400;
 }
 
 /* Responsive */

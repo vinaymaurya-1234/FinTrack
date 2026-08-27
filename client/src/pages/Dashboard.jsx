@@ -45,6 +45,7 @@ function Dashboard() {
         <RecentTransactions refresh={refresh} />
       </div>
     </div>
+    
   );
 }
 

@@ -1,6 +1,6 @@
-/* =========================
+/* ========================================
    PROFILE PAGE
-========================= */
+======================================== */
 
 .profile-page {
   min-height: 100%;
@@ -16,7 +16,7 @@
 .profile-header h2 {
   margin: 0;
   font-size: 26px;
-  font-weight: 700;
+  font-weight: 600;
   color: #242735;
 }
 
@@ -24,6 +24,7 @@
   margin: 6px 0 0;
   color: #858a9a;
   font-size: 14px;
+  font-weight: 400;
 }
 
 .profile-container {
@@ -31,9 +32,7 @@
   margin: 0 auto;
 }
 
-/* =========================
-   PROFILE CARD
-========================= */
+/* PROFILE CARD */
 
 .profile-card {
   display: flex;
@@ -50,18 +49,15 @@
   width: 78px;
   height: 78px;
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   overflow: hidden;
   border-radius: 50%;
   background: linear-gradient(135deg, #7464f5, #9b8df8);
-
   color: #fff;
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .profile-avatar img {
@@ -77,7 +73,7 @@
 .profile-main-info h2 {
   margin: 0 0 5px;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 300;
   color: #252936;
 }
 
@@ -85,16 +81,15 @@
   margin: 0;
   color: #858a9a;
   font-size: 14px;
+  font-weight: 400;
 }
 
 .edit-profile-btn {
   padding: 11px 19px;
   border: none;
   border-radius: 9px;
-
   background: #6d5ef8;
   color: #fff;
-
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -106,18 +101,14 @@
   transform: translateY(-1px);
 }
 
-/* =========================
-   COMMON SECTION
-========================= */
+/* COMMON SECTION */
 
 .profile-section {
   margin-top: 20px;
   padding: 24px 28px;
-
   background: #fff;
   border: 1px solid #ececf3;
   border-radius: 16px;
-
   box-shadow: 0 5px 20px rgba(38, 32, 72, 0.035);
 }
 
@@ -130,7 +121,7 @@
 .danger-section h3 {
   margin: 0;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   color: #292d3a;
 }
 
@@ -140,11 +131,10 @@
   margin: 6px 0 0;
   color: #8a8e9d;
   font-size: 13px;
+  font-weight: 400;
 }
 
-/* =========================
-   PERSONAL INFORMATION
-========================= */
+/* PERSONAL INFORMATION */
 
 .profile-info-grid {
   display: grid;
@@ -164,6 +154,7 @@
   margin-bottom: 7px;
   color: #8a8e9d;
   font-size: 12px;
+  font-weight: 400;
 }
 
 .profile-info-item strong {
@@ -172,9 +163,7 @@
   font-weight: 600;
 }
 
-/* =========================
-   LOGOUT
-========================= */
+/* LOGOUT */
 
 .logout-section {
   display: flex;
@@ -186,10 +175,8 @@
   padding: 10px 22px;
   border: 1px solid #dddde7;
   border-radius: 9px;
-
   background: #fff;
   color: #4e5261;
-
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -201,15 +188,12 @@
   border-color: #cfcfdc;
 }
 
-/* =========================
-   DANGER ZONE
-========================= */
+/* DANGER ZONE */
 
 .danger-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   border-color: #f0dcdc;
   background: #fffafa;
 }
@@ -222,10 +206,8 @@
   padding: 10px 18px;
   border: 1px solid #e6aaaa;
   border-radius: 9px;
-
   background: #fff;
   color: #c23d3d;
-
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -237,32 +219,25 @@
   border-color: #d98b8b;
 }
 
-/* =========================
-   MODAL OVERLAY
-========================= */
+/* MODAL OVERLAY */
 
 .profile-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 20px;
   background: rgba(20, 22, 35, 0.45);
 }
 
-/* =========================
-   MODAL
-========================= */
+/* MODAL */
 
 .profile-modal {
   width: 100%;
   max-width: 470px;
   padding: 26px;
-
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 20px 60px rgba(20, 20, 40, 0.18);
@@ -272,30 +247,30 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 15px;
 }
 
 .modal-header h2 {
   margin: 0;
   color: #252936;
   font-size: 20px;
+  font-weight: 600;
 }
 
 .modal-header p {
   margin: 6px 0 0;
   color: #858a9a;
   font-size: 13px;
+  font-weight: 400;
 }
 
 .close-modal-btn {
   width: 32px;
   height: 32px;
-
   border: none;
   border-radius: 8px;
-
   background: #f5f5f9;
   color: #666a78;
-
   font-size: 21px;
   line-height: 1;
   cursor: pointer;
@@ -305,9 +280,7 @@
   background: #ededf4;
 }
 
-/* =========================
-   MODAL PROFILE PHOTO
-========================= */
+/* MODAL PROFILE PHOTO */
 
 .modal-avatar {
   display: flex;
@@ -326,11 +299,9 @@
 .avatar-wrapper > span {
   width: 82px;
   height: 82px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 50%;
 }
 
@@ -342,30 +313,24 @@
   background: linear-gradient(135deg, #7464f5, #9b8df8);
   color: #fff;
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .avatar-camera-btn {
   position: absolute;
   right: -3px;
   bottom: -2px;
-
   width: 30px;
   height: 30px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border: 3px solid #fff;
   border-radius: 50%;
-
   background: #6d5ef8;
   color: #fff;
-
   font-size: 13px;
   cursor: pointer;
-
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
@@ -377,18 +342,16 @@
   margin-top: 12px;
   color: #777c8c;
   font-size: 12px;
+  font-weight: 400;
 }
 
 .remove-photo-btn {
   margin-top: 6px;
-
   border: none;
   background: transparent;
-
   color: #c23d3d;
   font-size: 12px;
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -396,9 +359,7 @@
   color: #a52f2f;
 }
 
-/* =========================
-   FORM
-========================= */
+/* FORM */
 
 .profile-form {
   display: flex;
@@ -421,17 +382,14 @@
 .form-group input {
   width: 100%;
   box-sizing: border-box;
-
   padding: 12px 13px;
-
   border: 1px solid #dedfe8;
   border-radius: 9px;
   outline: none;
-
   background: #fff;
   color: #292d3a;
-
   font-size: 14px;
+  font-weight: 400;
   transition: 0.2s ease;
 }
 
@@ -440,9 +398,7 @@
   box-shadow: 0 0 0 3px rgba(109, 94, 248, 0.1);
 }
 
-/* =========================
-   MODAL ACTIONS
-========================= */
+/* MODAL ACTIONS */
 
 .modal-actions {
   display: flex;
@@ -455,7 +411,6 @@
 .save-profile-btn {
   padding: 10px 18px;
   border-radius: 9px;
-
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -481,9 +436,7 @@
   background: #5d4ee8;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
+/* RESPONSIVE */
 
 @media (max-width: 700px) {
   .profile-page {
@@ -512,6 +465,48 @@
 
   .logout-btn,
   .delete-account-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 18px 12px 28px;
+  }
+
+  .profile-header h2 {
+    font-size: 24px;
+  }
+
+  .profile-card,
+  .profile-section {
+    padding: 20px;
+  }
+
+  .profile-card {
+    gap: 16px;
+  }
+
+  .profile-avatar {
+    width: 68px;
+    height: 68px;
+    font-size: 26px;
+  }
+
+  .profile-main-info h2 {
+    font-size: 18px;
+  }
+
+  .profile-modal {
+    padding: 22px 18px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-btn,
+  .save-profile-btn {
     width: 100%;
   }
 }

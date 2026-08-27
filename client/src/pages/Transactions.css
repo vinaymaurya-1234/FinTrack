@@ -9,10 +9,7 @@
   min-height: calc(100vh - 80px);
 }
 
-
-/* ========================================
-   HEADER - DESKTOP / LAPTOP
-======================================== */
+/* HEADER */
 
 .transactions-header {
   display: flex;
@@ -24,31 +21,23 @@
 .transactions-header h2 {
   margin: 0;
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
   color: #111827;
 }
 
-
-/* ========================================
-   ADD BUTTON - DESKTOP / LAPTOP
-======================================== */
+/* ADD BUTTON */
 
 .add-btn {
   border: none;
   cursor: pointer;
-
   background: #6d5ef8;
   color: white;
-
   padding: 12px 22px;
   border-radius: 10px;
-
   font-size: 14px;
   font-weight: 600;
-
   white-space: nowrap;
-
   transition: 0.3s;
 }
 
@@ -56,35 +45,25 @@
   background: #5b4ce0;
 }
 
-
-/* ========================================
-   SEARCH + FILTER - DESKTOP / LAPTOP
-======================================== */
+/* SEARCH + FILTER */
 
 .transactions-toolbar {
   margin-top: 28px;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   gap: 20px;
 }
 
 .search-input {
   flex: 1;
-
   padding: 14px 18px;
-
   border: none;
   outline: none;
-
   border-radius: 12px;
-
   background: white;
-
   font-size: 15px;
-
+  font-weight: 400;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -96,18 +75,12 @@
 .filter-buttons button {
   border: none;
   cursor: pointer;
-
   background: white;
-
   padding: 12px 20px;
-
   border-radius: 10px;
-
   font-size: 14px;
   font-weight: 600;
-
   transition: 0.25s;
-
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
@@ -121,81 +94,53 @@
   color: white;
 }
 
-
-/* ========================================
-   TRANSACTIONS TABLE - DESKTOP / LAPTOP
-======================================== */
+/* TRANSACTIONS TABLE */
 
 .transactions-table {
   margin-top: 25px;
-
   background: white;
-
   border-radius: 16px;
-
   overflow: visible;
-
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
 }
 
-
-/* ========================================
-   TABLE HEADER - DESKTOP / LAPTOP
-======================================== */
+/* TABLE HEADER */
 
 .table-header {
   display: grid;
-
   grid-template-columns:
     2fr
     1.2fr
     1.2fr
     1.4fr
     70px;
-
   align-items: center;
-
   padding: 17px 22px;
-
   background: #fafafa;
-
   border-bottom: 1px solid #eeeeee;
-
   font-size: 13px;
   font-weight: 600;
-
   color: #6b7280;
-
   border-radius: 16px 16px 0 0;
 }
 
-
-/* ========================================
-   TRANSACTION ROW - DESKTOP / LAPTOP
-======================================== */
+/* TRANSACTION ROW */
 
 .table-row {
   display: grid;
-
   grid-template-columns:
     2fr
     1.2fr
     1.2fr
     1.4fr
     70px;
-
   align-items: center;
-
   padding: 18px 22px;
-
   min-height: 64px;
-
   border-bottom: 1px solid #eeeeee;
-
   font-size: 15px;
-
+  font-weight: 400;
   color: #1f2937;
-
   transition: background 0.2s ease;
 }
 
@@ -208,10 +153,7 @@
   background: #fafaff;
 }
 
-
-/* ========================================
-   TRANSACTION TYPE - ALL DEVICES
-======================================== */
+/* TRANSACTION TYPE */
 
 .income,
 .expense {
@@ -227,24 +169,17 @@
   color: #dc5a52;
 }
 
-
-/* ========================================
-   AMOUNT - ALL DEVICES
-======================================== */
+/* AMOUNT */
 
 .amount {
   font-weight: 600;
   color: #374151;
 }
 
-
-/* ========================================
-   THREE DOT MENU - DESKTOP / LAPTOP
-======================================== */
+/* THREE DOT MENU */
 
 .actions {
   position: relative;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,23 +188,16 @@
 .menu-btn {
   width: 34px;
   height: 34px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border: none;
   border-radius: 8px;
-
   background: transparent;
-
   font-size: 18px;
   line-height: 1;
-
   cursor: pointer;
-
   color: #6b7280;
-
   transition: 0.2s;
 }
 
@@ -278,48 +206,31 @@
   color: #6d5ef8;
 }
 
-
-/* ========================================
-   ACTION DROPDOWN - ALL DEVICES
-======================================== */
+/* ACTION DROPDOWN */
 
 .action-menu {
   position: absolute;
-
   top: 38px;
   right: 0;
-
   width: 130px;
-
   background: white;
-
   border: 1px solid #eeeeee;
   border-radius: 10px;
-
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-
   overflow: hidden;
-
   z-index: 100;
 }
 
 .action-menu button {
   width: 100%;
-
   border: none;
   background: white;
-
   padding: 11px 14px;
-
   text-align: left;
-
   cursor: pointer;
-
   font-size: 13px;
   font-weight: 500;
-
   color: #374151;
-
   transition: 0.2s;
 }
 
@@ -331,33 +242,24 @@
   color: #dc5a52;
 }
 
-
-/* ========================================
-   PAGINATION - DESKTOP / LAPTOP
-======================================== */
+/* PAGINATION */
 
 .transaction-pagination {
   display: flex;
-
   justify-content: space-between;
   align-items: center;
-
   margin-top: 20px;
-
   padding: 18px 20px;
-
   background: white;
-
   border: 1px solid #e5e7eb;
   border-radius: 14px;
 }
 
 .transaction-pagination p {
   margin: 0;
-
   color: #6b7280;
-
   font-size: 14px;
+  font-weight: 400;
 }
 
 .view-buttons {
@@ -367,36 +269,24 @@
 
 .view-buttons button {
   border: none;
-
   background: #6d5ef8;
   color: white;
-
   padding: 10px 18px;
-
   border-radius: 8px;
-
   font-size: 14px;
   font-weight: 500;
-
   cursor: pointer;
-
   transition: all 0.25s ease;
 }
 
 .view-buttons button:hover {
   background: #5948e8;
-
   transform: translateY(-2px);
 }
 
-
-/* ========================================
-   TABLET VIEW
-   Screen width: 769px - 900px
-======================================== */
+/* TABLET */
 
 @media (max-width: 900px) {
-
   .transactions-page {
     padding: 22px;
   }
@@ -409,32 +299,20 @@
       1.2fr
       1.3fr
       60px;
-
     padding-left: 18px;
     padding-right: 18px;
   }
-
 }
 
-
-/* =========================
-   MOBILE VIEW ONLY
-========================= */
-
-/* =================================
-   MOBILE VIEW - CLEAN & COMPACT
-================================= */
+/* MOBILE */
 
 @media (max-width: 768px) {
-
   .transactions-page {
     padding: 18px;
     padding-top: 28px;
   }
 
-  /* =============================
-     HEADER
-  ============================== */
+  /* HEADER */
 
   .transactions-header {
     display: flex;
@@ -445,7 +323,7 @@
 
   .transactions-header h2 {
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 600;
     margin: 0;
     white-space: nowrap;
   }
@@ -457,10 +335,7 @@
     white-space: nowrap;
   }
 
-
-  /* =============================
-     SEARCH + FILTER
-  ============================== */
+  /* SEARCH + FILTER */
 
   .transactions-toolbar {
     margin-top: 22px;
@@ -490,19 +365,13 @@
     border-radius: 10px;
   }
 
-
-  /* =============================
-     HIDE TABLE HEADER
-  ============================== */
+  /* HIDE TABLE HEADER */
 
   .table-header {
     display: none;
   }
 
-
-  /* =============================
-     TRANSACTION LIST
-  ============================== */
+  /* TRANSACTION LIST */
 
   .transactions-table {
     margin-top: 16px;
@@ -510,97 +379,69 @@
     overflow: hidden;
   }
 
-
-  /* =============================
-     TRANSACTION ROW
-  ============================== */
+  /* TRANSACTION ROW */
 
   .table-row {
     position: relative;
-
     display: grid;
-
     grid-template-columns: 1fr auto;
-
     grid-template-areas:
       "category type"
       "amount date";
-
     column-gap: 12px;
     row-gap: 8px;
-
     padding: 14px 16px;
-
     min-height: auto;
-
     font-size: 14px;
+    font-weight: 400;
   }
-
 
   /* CATEGORY */
 
   .table-row > span:nth-child(1) {
     grid-area: category;
-
     font-size: 15px;
     font-weight: 600;
-
     padding-right: 20px;
   }
-
 
   /* TYPE */
 
   .table-row > span:nth-child(2) {
     grid-area: type;
-
     font-size: 13px;
     font-weight: 600;
-
     text-align: right;
-
     padding-right: 24px;
   }
-
 
   /* AMOUNT */
 
   .table-row > span:nth-child(3) {
     grid-area: amount;
-
     font-size: 14px;
     font-weight: 600;
   }
-
 
   /* DATE */
 
   .table-row > span:nth-child(4) {
     grid-area: date;
-
     font-size: 13px;
-
+    font-weight: 400;
     color: #6b7280;
-
     text-align: right;
-
     padding-right: 24px;
   }
 
-
-  /* =============================
-     THREE DOT MENU
-  ============================== */
+  /* THREE DOT MENU */
 
   .actions {
     position: absolute;
-
     top: 12px;
     right: 10px;
-
     width: 24px;
     height: 24px;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -609,36 +450,25 @@
   .menu-btn {
     width: 24px;
     height: 24px;
-
     padding: 0;
-
     font-size: 16px;
-
     background: transparent;
   }
 
   .action-menu {
     top: 28px;
     right: 0;
-
     width: 120px;
-
     z-index: 1000;
   }
 
-
-  /* =============================
-     PAGINATION
-  ============================== */
+  /* PAGINATION */
 
   .transaction-pagination {
     margin-top: 14px;
-
     padding: 14px;
-
     flex-direction: column;
     align-items: stretch;
-
     gap: 12px;
   }
 
@@ -649,5 +479,30 @@
   .view-buttons button {
     flex: 1;
   }
+}
 
+/* SMALL MOBILE */
+
+@media (max-width: 480px) {
+  .transactions-page {
+    padding: 14px;
+    padding-top: 22px;
+  }
+
+  .transactions-header h2 {
+    font-size: 23px;
+  }
+
+  .add-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .filter-buttons button {
+    font-size: 13px;
+  }
+
+  .table-row {
+    padding: 13px 14px;
+  }
 }

@@ -2,13 +2,33 @@ const express = require("express");
 const router = express.Router();
 
 const Goal = require("../models/Goal");
+const Transaction = require("../models/Transaction");
 const protect = require("../middleware/authMiddleware");
 
+// Get user's total available balance
+const getAvailableBalance = async (userId) => {
+  const transactions = await Transaction.find({ user: userId });
+  const goals = await Goal.find({ userId });
 
-// =========================
+  const totalIncome = transactions
+    .filter((t) => t.type === "Income")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalExpense = transactions
+    .filter((t) => t.type === "Expense")
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalBalance = totalIncome - totalExpense;
+
+  const reservedAmount = goals.reduce(
+    (sum, goal) => sum + Number(goal.savedAmount),
+    0,
+  );
+
+  return totalBalance - reservedAmount;
+};
+
 // GET ALL USER GOALS
-// =========================
-
 router.get("/", protect, async (req, res) => {
   try {
     const goals = await Goal.find({
@@ -24,11 +44,7 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
-
-// =========================
 // CREATE GOAL
-// =========================
-
 router.post("/", protect, async (req, res) => {
   try {
     const { name, targetAmount } = req.body;
@@ -39,20 +55,20 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    if (Number(targetAmount) <= 0) {
+    const amount = Number(targetAmount);
+
+    if (amount <= 0) {
       return res.status(400).json({
         message: "Target amount must be greater than 0",
       });
     }
 
-    const goal = new Goal({
+    const goal = await Goal.create({
       userId: req.user._id,
       name,
-      targetAmount: Number(targetAmount),
+      targetAmount: amount,
       savedAmount: 0,
     });
-
-    await goal.save();
 
     res.status(201).json(goal);
   } catch (error) {
@@ -63,11 +79,7 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
-
-// =========================
 // UPDATE GOAL
-// =========================
-
 router.put("/:id", protect, async (req, res) => {
   try {
     const { name, targetAmount } = req.body;
@@ -83,8 +95,8 @@ router.put("/:id", protect, async (req, res) => {
       });
     }
 
-    if (name) {
-      goal.name = name;
+    if (name !== undefined) {
+      goal.name = name.trim();
     }
 
     if (targetAmount !== undefined) {
@@ -98,8 +110,7 @@ router.put("/:id", protect, async (req, res) => {
 
       if (amount < goal.savedAmount) {
         return res.status(400).json({
-          message:
-            "Target amount cannot be less than saved amount",
+          message: "Target amount cannot be less than saved amount",
         });
       }
 
@@ -117,14 +128,17 @@ router.put("/:id", protect, async (req, res) => {
   }
 });
 
-
-// =========================
 // ADD MONEY TO GOAL
-// =========================
-
 router.put("/:id/add-money", protect, async (req, res) => {
   try {
     const { amount } = req.body;
+    const money = Number(amount);
+
+    if (!money || money <= 0) {
+      return res.status(400).json({
+        message: "Amount must be greater than 0",
+      });
+    }
 
     const goal = await Goal.findOne({
       _id: req.params.id,
@@ -137,14 +151,6 @@ router.put("/:id/add-money", protect, async (req, res) => {
       });
     }
 
-    const money = Number(amount);
-
-    if (!money || money <= 0) {
-      return res.status(400).json({
-        message: "Amount must be greater than 0",
-      });
-    }
-
     const remaining = goal.targetAmount - goal.savedAmount;
 
     if (money > remaining) {
@@ -152,6 +158,17 @@ router.put("/:id/add-money", protect, async (req, res) => {
         message: `Only ₹${remaining.toLocaleString(
           "en-IN",
         )} is remaining for this goal`,
+      });
+    }
+
+    const availableBalance = await getAvailableBalance(req.user._id);
+
+    if (money > availableBalance) {
+      return res.status(400).json({
+        message: `Insufficient available balance. You can reserve up to ₹${Math.max(
+          0,
+          availableBalance,
+        ).toLocaleString("en-IN")}`,
       });
     }
 
@@ -168,11 +185,51 @@ router.put("/:id/add-money", protect, async (req, res) => {
   }
 });
 
+// RELEASE MONEY FROM GOAL
+router.put("/:id/release-money", protect, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const money = Number(amount);
 
-// =========================
+    if (!money || money <= 0) {
+      return res.status(400).json({
+        message: "Amount must be greater than 0",
+      });
+    }
+
+    const goal = await Goal.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+
+    if (!goal) {
+      return res.status(404).json({
+        message: "Goal not found",
+      });
+    }
+
+    if (money > goal.savedAmount) {
+      return res.status(400).json({
+        message: `Only ₹${goal.savedAmount.toLocaleString(
+          "en-IN",
+        )} is reserved in this goal`,
+      });
+    }
+
+    goal.savedAmount -= money;
+
+    await goal.save();
+
+    res.status(200).json(goal);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to release money",
+      error: error.message,
+    });
+  }
+});
+
 // DELETE GOAL
-// =========================
-
 router.delete("/:id", protect, async (req, res) => {
   try {
     const goal = await Goal.findOneAndDelete({
@@ -188,6 +245,7 @@ router.delete("/:id", protect, async (req, res) => {
 
     res.status(200).json({
       message: "Goal deleted successfully",
+      releasedAmount: goal.savedAmount,
     });
   } catch (error) {
     res.status(500).json({
@@ -196,6 +254,5 @@ router.delete("/:id", protect, async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

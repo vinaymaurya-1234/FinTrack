@@ -136,6 +136,9 @@ function Profile() {
         }),
       );
 
+      // Notify Navbar that profile has been updated
+      window.dispatchEvent(new Event("profileUpdated"));
+
       setShowEditModal(false);
     } catch (error) {
       console.error("Error updating profile:", error);

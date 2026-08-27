@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { FaEllipsisV, FaBullseye } from "react-icons/fa";
 import "./Goals.css";
 
 function Goals() {
   const [goals, setGoals] = useState([]);
-
   const [showGoalModal, setShowGoalModal] = useState(false);
-  const [showMoneyModal, setShowMoneyModal] = useState(false);
-
-  const [editingGoal, setEditingGoal] = useState(null);
-  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [moneyModal, setMoneyModal] = useState(null);
+  const [releaseModal, setReleaseModal] = useState(null);
+  const [menuId, setMenuId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [toast, setToast] = useState("");
 
   const [goalName, setGoalName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -23,335 +24,352 @@ function Goals() {
     },
   };
 
-  // =========================
-  // GET GOALS
-  // =========================
-
-  const getGoals = async () => {
+  const fetchGoals = async () => {
     try {
       const response = await axios.get(
         "http://localhost:5000/api/goals",
         config,
       );
-
       setGoals(response.data);
     } catch (error) {
-      console.error("Error fetching goals:", error);
+      showToast(error.response?.data?.message || "Failed to load goals");
     }
   };
 
   useEffect(() => {
-    getGoals();
+    fetchGoals();
   }, []);
 
-  // =========================
-  // ADD GOAL
-  // =========================
-
-  const handleAddGoalClick = () => {
-    setEditingGoal(null);
-    setGoalName("");
-    setTargetAmount("");
-    setShowGoalModal(true);
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(""), 2500);
   };
 
-  // =========================
-  // EDIT GOAL
-  // =========================
-
-  const handleEditGoal = (goal) => {
-    setEditingGoal(goal);
-    setGoalName(goal.name);
-    setTargetAmount(goal.targetAmount);
-    setShowGoalModal(true);
-  };
-
-  // =========================
-  // SAVE GOAL
-  // =========================
-
-  const handleSaveGoal = async () => {
-    if (!goalName.trim() || !targetAmount) {
-      return;
-    }
+  const createGoal = async (e) => {
+    e.preventDefault();
 
     try {
-      if (editingGoal) {
-        const response = await axios.put(
-          `http://localhost:5000/api/goals/${editingGoal._id}`,
-          {
-            name: goalName,
-            targetAmount: Number(targetAmount),
-          },
-          config,
-        );
-
-        setGoals((prev) =>
-          prev.map((goal) =>
-            goal._id === editingGoal._id ? response.data : goal,
-          ),
-        );
-      } else {
-        const response = await axios.post(
-          "http://localhost:5000/api/goals",
-          {
-            name: goalName,
-            targetAmount: Number(targetAmount),
-          },
-          config,
-        );
-
-        setGoals((prev) => [response.data, ...prev]);
-      }
-
-      closeGoalModal();
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to save goal");
-    }
-  };
-
-  // =========================
-  // DELETE GOAL
-  // =========================
-
-  const handleDeleteGoal = async (goal) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${goal.name}"?`,
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await axios.delete(`http://localhost:5000/api/goals/${goal._id}`, config);
-
-      setGoals((prev) => prev.filter((item) => item._id !== goal._id));
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to delete goal");
-    }
-  };
-
-  // =========================
-  // ADD MONEY
-  // =========================
-
-  const handleAddMoneyClick = (goal) => {
-    setSelectedGoal(goal);
-    setMoneyAmount("");
-    setShowMoneyModal(true);
-  };
-
-  const handleAddMoney = async () => {
-    if (!selectedGoal || !moneyAmount) {
-      return;
-    }
-
-    try {
-      const response = await axios.put(
-        `http://localhost:5000/api/goals/${selectedGoal._id}/add-money`,
+      await axios.post(
+        "http://localhost:5000/api/goals",
         {
-          amount: Number(moneyAmount),
+          name: goalName,
+          targetAmount: Number(targetAmount),
         },
         config,
       );
 
-      setGoals((prev) =>
-        prev.map((goal) =>
-          goal._id === selectedGoal._id ? response.data : goal,
-        ),
-      );
-
-      closeMoneyModal();
+      setGoalName("");
+      setTargetAmount("");
+      setShowGoalModal(false);
+      fetchGoals();
+      showToast("Goal created successfully");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to add money");
+      showToast(error.response?.data?.message || "Failed to create goal");
     }
   };
 
-  // =========================
-  // CLOSE MODALS
-  // =========================
+  const updateGoal = async (goal) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/goals/${goal._id}`,
+        {
+          name: goal.name,
+          targetAmount: Number(goal.targetAmount),
+        },
+        config,
+      );
 
-  const closeGoalModal = () => {
-    setShowGoalModal(false);
-    setEditingGoal(null);
-    setGoalName("");
-    setTargetAmount("");
+      setEditingId(null);
+      fetchGoals();
+      showToast("Goal updated successfully");
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to update goal");
+    }
   };
 
-  const closeMoneyModal = () => {
-    setShowMoneyModal(false);
-    setSelectedGoal(null);
-    setMoneyAmount("");
+  const deleteGoal = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/goals/${id}`, config);
+
+      setMenuId(null);
+      fetchGoals();
+      showToast("Goal deleted successfully");
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to delete goal");
+    }
   };
 
-  // =========================
-  // OVERVIEW
-  // =========================
+  const addMoney = async (e) => {
+    e.preventDefault();
 
-  const totalTarget = goals.reduce(
-    (total, goal) => total + goal.targetAmount,
+    try {
+      await axios.put(
+        `http://localhost:5000/api/goals/${moneyModal._id}/add-money`,
+        { amount: Number(moneyAmount) },
+        config,
+      );
+
+      setMoneyAmount("");
+      setMoneyModal(null);
+      fetchGoals();
+      showToast("Money added successfully");
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to add money");
+    }
+  };
+
+  const releaseMoney = async (e) => {
+    e.preventDefault();
+
+    try {
+      await axios.put(
+        `http://localhost:5000/api/goals/${releaseModal._id}/release-money`,
+        { amount: Number(moneyAmount) },
+        config,
+      );
+
+      setMoneyAmount("");
+      setReleaseModal(null);
+      fetchGoals();
+      showToast("Money released successfully");
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to release money");
+    }
+  };
+
+  const totalSaved = goals.reduce(
+    (sum, goal) => sum + Number(goal.savedAmount),
     0,
   );
 
-  const totalSaved = goals.reduce((total, goal) => total + goal.savedAmount, 0);
+  const totalTarget = goals.reduce(
+    (sum, goal) => sum + Number(goal.targetAmount),
+    0,
+  );
 
-  const completedGoals = goals.filter(
-    (goal) => goal.savedAmount >= goal.targetAmount,
+  const completed = goals.filter(
+    (goal) => Number(goal.savedAmount) >= Number(goal.targetAmount),
   ).length;
 
   return (
     <div className="goals-page">
-      {/* HEADER */}
-
       <div className="goals-header">
         <div>
           <h1>Goals</h1>
-
           <p>Set savings targets and track your progress.</p>
         </div>
 
-        <button className="add-goal-btn" onClick={handleAddGoalClick}>
+        <button className="add-goal-btn" onClick={() => setShowGoalModal(true)}>
           + Add Goal
         </button>
       </div>
 
-      {/* OVERVIEW */}
-
-      {goals.length > 0 && (
-        <div className="goals-overview">
-          <div className="overview-item">
-            <span>Total Goals</span>
-            <strong>{goals.length}</strong>
-          </div>
-
-          <div className="overview-item">
-            <span>Total Saved</span>
-
-            <strong>₹{totalSaved.toLocaleString("en-IN")}</strong>
-          </div>
-
-          <div className="overview-item">
-            <span>Total Target</span>
-
-            <strong>₹{totalTarget.toLocaleString("en-IN")}</strong>
-          </div>
-
-          <div className="overview-item">
-            <span>Completed</span>
-
-            <strong>{completedGoals}</strong>
-          </div>
+      <div className="goals-overview">
+        <div className="overview-item">
+          <span>Total Goals</span>
+          <strong>{goals.length}</strong>
         </div>
-      )}
 
-      {/* GOALS */}
+        <div className="overview-item">
+          <span>Total Reserved</span>
+          <strong>₹{totalSaved.toLocaleString("en-IN")}</strong>
+        </div>
+
+        <div className="overview-item">
+          <span>Total Target</span>
+          <strong>₹{totalTarget.toLocaleString("en-IN")}</strong>
+        </div>
+
+        <div className="overview-item">
+          <span>Completed</span>
+          <strong>{completed}</strong>
+        </div>
+      </div>
 
       <div className="goals-section">
         <div className="goals-section-header">
-          <div>
-            <h2>Your Goals</h2>
-
-            <p>Keep track of the things you're saving for.</p>
-          </div>
+          <h2>Your Goals</h2>
+          <p>Keep track of the things you're saving for.</p>
         </div>
 
         {goals.length === 0 ? (
           <div className="goals-empty">
-            <div className="empty-goal-icon">◎</div>
+            <div className="empty-goal-icon">
+              <FaBullseye />
+            </div>
 
-            <h3>No goals created yet</h3>
+            <h3>No goals yet</h3>
+            <p>
+              Create your first savings goal to start tracking your progress.
+            </p>
 
-            <p>Create a savings goal and start working towards it.</p>
-
-            <button className="empty-create-btn" onClick={handleAddGoalClick}>
-              Create Your First Goal
+            <button
+              className="empty-create-btn"
+              onClick={() => setShowGoalModal(true)}
+            >
+              + Create Goal
             </button>
           </div>
         ) : (
           <div className="goals-grid">
             {goals.map((goal) => {
               const percentage = Math.min(
-                (goal.savedAmount / goal.targetAmount) * 100,
                 100,
+                Math.round((goal.savedAmount / goal.targetAmount) * 100),
               );
 
-              const remaining = Math.max(
-                goal.targetAmount - goal.savedAmount,
-                0,
-              );
-
-              const completed = goal.savedAmount >= goal.targetAmount;
+              const remaining = goal.targetAmount - goal.savedAmount;
 
               return (
                 <div className="goal-card" key={goal._id}>
-                  {/* CARD HEADER */}
-
                   <div className="goal-card-header">
-                    <div>
-                      <h3>{goal.name}</h3>
+                    {editingId === goal._id ? (
+                      <div className="goal-inline-edit">
+                        <input
+                          className="goal-edit-input"
+                          value={goal.name}
+                          onChange={(e) =>
+                            setGoals((prev) =>
+                              prev.map((item) =>
+                                item._id === goal._id
+                                  ? { ...item, name: e.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                        />
 
-                      <span>
-                        Target ₹{goal.targetAmount.toLocaleString("en-IN")}
-                      </span>
-                    </div>
+                        <input
+                          className="goal-edit-input"
+                          type="number"
+                          value={goal.targetAmount}
+                          onChange={(e) =>
+                            setGoals((prev) =>
+                              prev.map((item) =>
+                                item._id === goal._id
+                                  ? {
+                                      ...item,
+                                      targetAmount: e.target.value,
+                                    }
+                                  : item,
+                              ),
+                            )
+                          }
+                        />
 
-                    <div className="goal-actions">
-                      <button onClick={() => handleEditGoal(goal)}>Edit</button>
+                        <div className="goal-edit-actions">
+                          <button
+                            className="goal-cancel-edit-btn"
+                            onClick={() => {
+                              setEditingId(null);
+                              fetchGoals();
+                            }}
+                          >
+                            Cancel
+                          </button>
 
+                          <button
+                            className="goal-save-edit-btn"
+                            onClick={() => updateGoal(goal)}
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <h3>{goal.name}</h3>
+                        <span>
+                          Target ₹
+                          {Number(goal.targetAmount).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="goal-menu">
                       <button
-                        className="goal-delete-btn"
-                        onClick={() => handleDeleteGoal(goal)}
+                        className="goal-menu-btn"
+                        onClick={() =>
+                          setMenuId(menuId === goal._id ? null : goal._id)
+                        }
                       >
-                        Delete
+                        <FaEllipsisV />
                       </button>
+
+                      {menuId === goal._id && (
+                        <div className="goal-menu-dropdown">
+                          <button
+                            onClick={() => {
+                              setEditingId(goal._id);
+                              setMenuId(null);
+                            }}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="delete-option"
+                            onClick={() => deleteGoal(goal._id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* AMOUNT */}
 
                   <div className="goal-amount-row">
                     <div>
-                      <span>Saved</span>
-
+                      <span>Locked</span>
                       <strong>
-                        ₹{goal.savedAmount.toLocaleString("en-IN")}
+                        ₹{Number(goal.savedAmount).toLocaleString("en-IN")}
                       </strong>
                     </div>
 
-                    <strong className="goal-percentage">
-                      {Math.round(percentage)}%
-                    </strong>
+                    <strong className="goal-percentage">{percentage}%</strong>
                   </div>
-
-                  {/* PROGRESS */}
 
                   <div className="goal-progress">
                     <div
                       className="goal-progress-fill"
-                      style={{
-                        width: `${percentage}%`,
-                      }}
+                      style={{ width: `${percentage}%` }}
                     />
                   </div>
 
-                  {/* FOOTER */}
-
                   <div className="goal-card-footer">
-                    {completed ? (
-                      <span className="goal-completed">✓ Goal completed</span>
-                    ) : (
+                    {remaining > 0 ? (
                       <span className="goal-remaining">
                         ₹{remaining.toLocaleString("en-IN")} remaining
                       </span>
+                    ) : (
+                      <span className="goal-completed">Goal completed</span>
                     )}
 
-                    {!completed && (
-                      <button
-                        className="add-money-btn"
-                        onClick={() => handleAddMoneyClick(goal)}
-                      >
-                        + Add Money
-                      </button>
-                    )}
+                    <div className="goal-money-actions">
+                      {remaining > 0 && (
+                        <button
+                          className="add-money-btn"
+                          onClick={() => {
+                            setMoneyAmount("");
+                            setMoneyModal(goal);
+                          }}
+                        >
+                          + Add Money
+                        </button>
+                      )}
+
+                      {Number(goal.savedAmount) > 0 && (
+                        <button
+                          className="release-money-btn"
+                          onClick={() => {
+                            setMoneyAmount("");
+                            setReleaseModal(goal);
+                          }}
+                        >
+                          Release
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -360,129 +378,198 @@ function Goals() {
         )}
       </div>
 
-      {/* ADD / EDIT GOAL MODAL */}
-
       {showGoalModal && (
         <div className="goal-modal-overlay">
           <div className="goal-modal">
             <div className="goal-modal-header">
               <div>
-                <h2>{editingGoal ? "Edit Goal" : "Create Goal"}</h2>
-
-                <p>
-                  {editingGoal
-                    ? "Update your goal details."
-                    : "Set a target for something you want to achieve."}
-                </p>
+                <h2>Add Goal</h2>
+                <p>Create a new savings goal.</p>
               </div>
 
-              <button className="goal-modal-close" onClick={closeGoalModal}>
+              <button
+                className="goal-modal-close"
+                onClick={() => setShowGoalModal(false)}
+              >
                 ×
               </button>
             </div>
 
-            <div className="goal-form">
+            <form className="goal-form" onSubmit={createGoal}>
               <div className="goal-form-group">
                 <label>Goal Name</label>
-
                 <input
-                  type="text"
-                  placeholder="e.g. New Laptop"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
+                  placeholder="e.g. Laptop"
+                  required
                 />
               </div>
 
               <div className="goal-form-group">
                 <label>Target Amount</label>
-
                 <input
                   type="number"
                   min="1"
-                  placeholder="e.g. 50000"
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(e.target.value)}
+                  placeholder="50000"
+                  required
                 />
               </div>
-            </div>
 
-            <div className="goal-modal-actions">
-              <button className="goal-cancel-btn" onClick={closeGoalModal}>
-                Cancel
-              </button>
+              <div className="goal-modal-actions">
+                <button
+                  type="button"
+                  className="goal-cancel-btn"
+                  onClick={() => setShowGoalModal(false)}
+                >
+                  Cancel
+                </button>
 
-              <button className="goal-save-btn" onClick={handleSaveGoal}>
-                {editingGoal ? "Save Changes" : "Create Goal"}
-              </button>
-            </div>
+                <button type="submit" className="goal-save-btn">
+                  Create Goal
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* ADD MONEY MODAL */}
-
-      {showMoneyModal && selectedGoal && (
+      {moneyModal && (
         <div className="goal-modal-overlay">
           <div className="goal-modal money-modal">
             <div className="goal-modal-header">
               <div>
                 <h2>Add Money</h2>
-
-                <p>
-                  Add money towards <strong>{selectedGoal.name}</strong>.
-                </p>
+                <p>Add money to {moneyModal.name}.</p>
               </div>
 
-              <button className="goal-modal-close" onClick={closeMoneyModal}>
+              <button
+                className="goal-modal-close"
+                onClick={() => setMoneyModal(null)}
+              >
                 ×
               </button>
             </div>
 
-            <div className="money-summary">
-              <div>
-                <span>Currently Saved</span>
+            <form className="goal-form" onSubmit={addMoney}>
+              <div className="money-summary">
+                <div>
+                  <span>Locked Amount</span>
+                  <strong>
+                    ₹{Number(moneyModal.savedAmount).toLocaleString("en-IN")}
+                  </strong>
+                </div>
 
-                <strong>
-                  ₹{selectedGoal.savedAmount.toLocaleString("en-IN")}
-                </strong>
+                <div>
+                  <span>Remaining</span>
+                  <strong>
+                    ₹
+                    {(
+                      moneyModal.targetAmount - moneyModal.savedAmount
+                    ).toLocaleString("en-IN")}
+                  </strong>
+                </div>
               </div>
 
-              <div>
-                <span>Remaining</span>
-
-                <strong>
-                  ₹
-                  {(
-                    selectedGoal.targetAmount - selectedGoal.savedAmount
-                  ).toLocaleString("en-IN")}
-                </strong>
+              <div className="goal-form-group">
+                <label>Amount</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={moneyAmount}
+                  onChange={(e) => setMoneyAmount(e.target.value)}
+                  required
+                />
               </div>
-            </div>
 
-            <div className="goal-form-group">
-              <label>Amount to Add</label>
+              <div className="goal-modal-actions">
+                <button
+                  type="button"
+                  className="goal-cancel-btn"
+                  onClick={() => setMoneyModal(null)}
+                >
+                  Cancel
+                </button>
 
-              <input
-                type="number"
-                min="1"
-                placeholder="e.g. 5000"
-                value={moneyAmount}
-                onChange={(e) => setMoneyAmount(e.target.value)}
-              />
-            </div>
-
-            <div className="goal-modal-actions">
-              <button className="goal-cancel-btn" onClick={closeMoneyModal}>
-                Cancel
-              </button>
-
-              <button className="goal-save-btn" onClick={handleAddMoney}>
-                Add Money
-              </button>
-            </div>
+                <button type="submit" className="goal-save-btn">
+                  Add Money
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
+      {releaseModal && (
+        <div className="goal-modal-overlay">
+          <div className="goal-modal money-modal">
+            <div className="goal-modal-header">
+              <div>
+                <h2>Release Money</h2>
+                <p>Release money from {releaseModal.name}.</p>
+              </div>
+
+              <button
+                className="goal-modal-close"
+                onClick={() => setReleaseModal(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form className="goal-form" onSubmit={releaseMoney}>
+              <div className="money-summary">
+                <div>
+                  <span>Locked Amount</span>
+                  <strong>
+                    ₹{Number(releaseModal.savedAmount).toLocaleString("en-IN")}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>After Release</span>
+                  <strong>
+                    ₹
+                    {(
+                      releaseModal.savedAmount - Number(moneyAmount || 0)
+                    ).toLocaleString("en-IN")}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="goal-form-group">
+                <label>Amount to Release</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={releaseModal.savedAmount}
+                  value={moneyAmount}
+                  onChange={(e) => setMoneyAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="goal-modal-actions">
+                <button
+                  type="button"
+                  className="goal-cancel-btn"
+                  onClick={() => setReleaseModal(null)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="goal-save-btn">
+                  Release Money
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="goal-toast">{toast}</div>}
     </div>
   );
 }
