@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import BudgetRow from "./BudgetRow";
 import "./BudgetPlan.css";
+import { API_URL } from "../../api";
 
 function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budgetCategories, setBudgetCategories] = useState([]);
@@ -23,10 +24,10 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
 
       const [categoryResponse, transactionResponse] = await Promise.all([
         fetch(
-          `http://localhost:5000/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
+          `${API_URL}/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
           { headers },
         ),
-        fetch("http://localhost:5000/api/transactions", {
+        fetch(`${API_URL}/api/transactions`, {
           headers,
         }),
       ]);
@@ -112,27 +113,24 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
         return;
       }
 
-      const response = await fetch(
-        "http://localhost:5000/api/budget-categories",
-        {
-          method: "POST",
+      const response = await fetch(`${API_URL}/api/budget-categories`, {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({
-            category: categoryName,
-            amount: Number(categoryAmount),
-
-            // IMPORTANT:
-            // Selected month/year me category save hogi
-            month: selectedMonth,
-            year: selectedYear,
-          }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+
+        body: JSON.stringify({
+          category: categoryName,
+          amount: Number(categoryAmount),
+
+          // IMPORTANT:
+          // Selected month/year me category save hogi
+          month: selectedMonth,
+          year: selectedYear,
+        }),
+      });
 
       const data = await response.json();
 
@@ -157,7 +155,7 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:5000/api/budget-categories/${categoryId}`,
+        `${API_URL}/api/budget-categories/${categoryId}`,
         {
           method: "DELETE",
 

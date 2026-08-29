@@ -1,6 +1,7 @@
 import "./Profile.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../api";
 
 function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -29,7 +30,7 @@ function Profile() {
     const getProfile = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/auth/profile",
+          `${API_URL}/api/auth/profile`,
           config,
         );
 
@@ -106,7 +107,7 @@ function Profile() {
       setSaving(true);
 
       const response = await axios.put(
-        "http://localhost:5000/api/auth/profile",
+        `${API_URL}/api/auth/profile`,
         {
           name,
           email,

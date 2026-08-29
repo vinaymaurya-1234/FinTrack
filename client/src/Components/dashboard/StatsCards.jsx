@@ -1,6 +1,7 @@
 import "./StatsCards.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../api";
 import {
   FaWallet,
   FaArrowTrendUp,
@@ -24,8 +25,8 @@ function StatsCards({ refresh }) {
     const getData = async () => {
       try {
         const [transactionRes, goalRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/transactions", config),
-          axios.get("http://localhost:5000/api/goals", config),
+          axios.get(`${API_URL}/api/transactions`, config),
+          axios.get(`${API_URL}/api/goals`, config),
         ]);
 
         setTransactions(transactionRes.data);

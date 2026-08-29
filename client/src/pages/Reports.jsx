@@ -2,6 +2,7 @@ import "./Reports.css";
 import { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { API_URL } from "../api";
 
 function Reports() {
   const currentDate = new Date();
@@ -33,7 +34,7 @@ function Reports() {
 
         if (!token) return;
 
-        const response = await fetch("http://localhost:5000/api/transactions", {
+        const response = await fetch(`${API_URL}/api/transactions`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

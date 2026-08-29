@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./RecentTransactions.css";
+import { API_URL } from "../../api";
 
 function RecentTransactions({refresh}) {
   const [transactions, setTransactions] = useState([]);
@@ -10,7 +11,7 @@ function RecentTransactions({refresh}) {
   const token = localStorage.getItem("token");
 
   axios
-    .get("http://localhost:5000/api/transactions", {
+    .get(`${API_URL}/api/transactions`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

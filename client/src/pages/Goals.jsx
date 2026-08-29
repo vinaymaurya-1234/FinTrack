@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaEllipsisV, FaBullseye } from "react-icons/fa";
 import "./Goals.css";
+import { API_URL } from "../api";
 
 function Goals() {
   const [goals, setGoals] = useState([]);
@@ -27,7 +28,7 @@ function Goals() {
   const fetchGoals = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/goals",
+        `${API_URL}/api/goals`,
         config,
       );
       setGoals(response.data);
@@ -50,7 +51,7 @@ function Goals() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/goals",
+        `${API_URL}/api/goals`,
         {
           name: goalName,
           targetAmount: Number(targetAmount),
@@ -71,7 +72,7 @@ function Goals() {
   const updateGoal = async (goal) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/goals/${goal._id}`,
+        `${API_URL}/api/goals/${goal._id}`,
         {
           name: goal.name,
           targetAmount: Number(goal.targetAmount),
@@ -89,7 +90,7 @@ function Goals() {
 
   const deleteGoal = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/goals/${id}`, config);
+      await axios.delete(`${API_URL}/api/goals/${id}`, config);
 
       setMenuId(null);
       fetchGoals();
@@ -104,7 +105,7 @@ function Goals() {
 
     try {
       await axios.put(
-        `http://localhost:5000/api/goals/${moneyModal._id}/add-money`,
+        `${API_URL}/api/goals/${moneyModal._id}/add-money`,
         { amount: Number(moneyAmount) },
         config,
       );
@@ -123,7 +124,7 @@ function Goals() {
 
     try {
       await axios.put(
-        `http://localhost:5000/api/goals/${releaseModal._id}/release-money`,
+        `${API_URL}/api/goals/${releaseModal._id}/release-money`,
         { amount: Number(moneyAmount) },
         config,
       );

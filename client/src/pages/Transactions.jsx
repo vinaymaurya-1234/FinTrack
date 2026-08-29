@@ -3,6 +3,7 @@ import AddTransaction from "../Components/transaction/AddTransaction";
 import { FaEllipsisVertical } from "react-icons/fa6";
 import "./Transactions.css";
 import axios from "axios";
+import { API_URL } from "../api";
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -19,10 +20,7 @@ function Transactions() {
   useEffect(() => {
     const getTransactions = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/transactions",
-          config,
-        );
+        const response = await axios.get(`${API_URL}/api/transactions`, config);
 
         setTransactions(response.data);
       } catch (error) {
@@ -41,7 +39,7 @@ function Transactions() {
   const handleAddTransaction = async (newTransaction) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/transactions",
+        `${API_URL}/api/transactions`,
         newTransaction,
         config,
       );
@@ -60,10 +58,7 @@ function Transactions() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `http://localhost:5000/api/transactions/${id}`,
-        config,
-      );
+      await axios.delete(`${API_URL}/api/transactions/${id}`, config);
 
       setTransactions((prev) =>
         prev.filter((transaction) => transaction._id !== id),
@@ -80,7 +75,7 @@ function Transactions() {
   const handleUpdateTransaction = async (updatedTransaction) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/transactions/${editingTransaction._id}`,
+        `${API_URL}/api/transactions/${editingTransaction._id}`,
         updatedTransaction,
         config,
       );

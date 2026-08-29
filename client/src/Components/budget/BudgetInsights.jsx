@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./BudgetInsights.css";
+import { API_URL } from "../../api";
 
 function BudgetInsights() {
   const [budget, setBudget] = useState(null);
@@ -28,15 +29,14 @@ function BudgetInsights() {
         const [budgetResponse, transactionResponse, categoryResponse] =
           await Promise.all([
             fetch(
-              `http://localhost:5000/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
-              { headers }
+              `${API_URL}/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
             ),
-            fetch("http://localhost:5000/api/transactions", {
+             fetch(`${API_URL}/api/transactions`, {
               headers,
             }),
             fetch(
-              `http://localhost:5000/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
-              { headers }
+              `${API_URL}/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
+              { headers },
             ),
           ]);
 
@@ -74,42 +74,29 @@ function BudgetInsights() {
 
   const totalSpent = selectedMonthTransactions
     .filter((transaction) => transaction.type === "Expense")
-    .reduce(
-      (total, transaction) => total + Number(transaction.amount),
-      0
-    );
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
   const totalBudget = budget ? Number(budget.amount) : 0;
 
   const totalRemaining = totalBudget - totalSpent;
 
-  const usedPercentage =
-    totalBudget > 0
-      ? (totalSpent / totalBudget) * 100
-      : 0;
+  const usedPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   const getCategorySpent = (category) => {
     return selectedMonthTransactions
       .filter(
         (transaction) =>
           transaction.type === "Expense" &&
-          transaction.category.toLowerCase() ===
-            category.toLowerCase()
+          transaction.category.toLowerCase() === category.toLowerCase(),
       )
-      .reduce(
-        (total, transaction) => total + Number(transaction.amount),
-        0
-      );
+      .reduce((total, transaction) => total + Number(transaction.amount), 0);
   };
 
   const categoryInsights = budgetCategories.map((category) => {
     const spent = getCategorySpent(category.category);
     const categoryBudget = Number(category.amount);
 
-    const progress =
-      categoryBudget > 0
-        ? (spent / categoryBudget) * 100
-        : 0;
+    const progress = categoryBudget > 0 ? (spent / categoryBudget) * 100 : 0;
 
     return {
       category: category.category,
@@ -119,15 +106,15 @@ function BudgetInsights() {
   });
 
   const exceededCategories = categoryInsights.filter(
-    (category) => category.progress > 100
+    (category) => category.progress > 100,
   );
 
   const highestExceededCategory = [...exceededCategories].sort(
-    (a, b) => b.progress - a.progress
+    (a, b) => b.progress - a.progress,
   )[0];
 
   const highestSpentCategory = [...categoryInsights].sort(
-    (a, b) => b.spent - a.spent
+    (a, b) => b.spent - a.spent,
   )[0];
 
   return (
@@ -149,17 +136,17 @@ function BudgetInsights() {
               {usedPercentage > 100
                 ? "Budget exceeded!"
                 : usedPercentage >= 80
-                ? "Watch out!"
-                : "You're on track!"}
+                  ? "Watch out!"
+                  : "You're on track!"}
             </h4>
 
             <p>
               {usedPercentage > 100
                 ? `You've exceeded your monthly budget by ₹${Math.abs(
-                    totalRemaining
+                    totalRemaining,
                   ).toLocaleString("en-IN")}.`
                 : `You've used ${usedPercentage.toFixed(
-                    0
+                    0,
                   )}% of your monthly budget.`}
             </p>
           </div>
@@ -182,7 +169,7 @@ function BudgetInsights() {
             <p>
               {highestExceededCategory
                 ? `${highestExceededCategory.category} is ${highestExceededCategory.progress.toFixed(
-                    0
+                    0,
                   )}% of its budget.`
                 : "All your category spending is currently within budget."}
             </p>
@@ -200,7 +187,7 @@ function BudgetInsights() {
                 ? `Your highest spending category is ${
                     highestSpentCategory.category
                   } with ₹${highestSpentCategory.spent.toLocaleString(
-                    "en-IN"
+                    "en-IN",
                   )} spent.`
                 : "Add transactions to start getting personalized insights."}
             </p>
@@ -212,3 +199,7 @@ function BudgetInsights() {
 }
 
 export default BudgetInsights;
+
+
+
+

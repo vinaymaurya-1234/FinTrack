@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./BudgetOverview.css";
+import { API_URL } from "../../api";
 
 function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budget, setBudget] = useState(null);
@@ -14,7 +15,7 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
 
         // Selected month ka budget
         const budgetResponse = await fetch(
-          `http://localhost:5000/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
+          `${API_URL}/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -31,14 +32,11 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
         }
 
         // All transactions
-        const transactionResponse = await fetch(
-          "http://localhost:5000/api/transactions",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const transactionResponse = await fetch(`${API_URL}/api/transactions`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         const transactionData = await transactionResponse.json();
 

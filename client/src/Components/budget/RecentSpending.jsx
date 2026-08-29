@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SpendingItem from "./SpendingItem";
 import "./RecentSpending.css";
+import { API_URL } from "../../api";
 
 function RecentSpending({ selectedMonthIndex, selectedYear }) {
   const [transactions, setTransactions] = useState([]);
@@ -14,7 +15,7 @@ function RecentSpending({ selectedMonthIndex, selectedYear }) {
 
         if (!token) return;
 
-        const response = await fetch("http://localhost:5000/api/transactions", {
+        const response = await fetch(`${API_URL}/api/transactions`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

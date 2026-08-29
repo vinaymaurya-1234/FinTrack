@@ -1,6 +1,7 @@
 import "./Budget.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../api";
 import BudgetOverview from "../Components/budget/BudgetOverview";
 import BudgetInsights from "../Components/budget/BudgetInsights";
 import BudgetPlan from "../Components/budget/BudgetPlan";
@@ -103,7 +104,7 @@ function Budget() {
     );
 
     try {
-      const response = await fetch("http://localhost:5000/api/budgets", {
+      const response = await fetch(`${API_URL}/budgets`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

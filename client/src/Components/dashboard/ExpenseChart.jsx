@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./ExpenseChart.css";
+import { API_URL } from "../../api";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -20,7 +21,7 @@ function ExpenseChart() {
     const token = localStorage.getItem("token");
 
     axios
-      .get("http://localhost:5000/api/transactions", {
+      .get(`${API_URL}/api/transactions`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
