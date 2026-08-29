@@ -2,7 +2,7 @@
   background: white;
   border-radius: 18px;
   padding: 22px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .chart-header {
@@ -13,6 +13,7 @@
 
 .chart-header h3 {
   font-size: 20px;
+  margin: 0;
 }
 
 .chart-header select {
@@ -20,6 +21,8 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   outline: none;
+  background: white;
+  cursor: pointer;
 }
 
 .chart-box {
@@ -27,78 +30,60 @@
   margin-top: 20px;
   border-radius: 12px;
   background: #f5f7fb;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  position: relative;
-  z-index: 0;
-
-  color: #999;
+  padding: 10px;
 }
 
 /* ---------- Tablet ---------- */
 
-@media (max-width:1024px){
+@media (max-width: 1024px) {
+  .expense-chart {
+    padding: 20px;
+  }
 
-.expense-chart{
-    padding:20px;
+  .chart-box {
+    height: 280px;
+  }
 }
-
-.chart-box{
-    height:280px;
-}
-
-}
-
 
 /* ---------- Mobile ---------- */
 
-@media (max-width:768px){
+@media (max-width: 768px) {
+  .expense-chart {
+    padding: 18px;
+    border-radius: 16px;
+  }
 
-.expense-chart{
-    padding:18px;
-    border-radius:16px;
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .chart-header h3 {
+    font-size: 18px;
+  }
+
+  .chart-header select {
+    width: 100%;
+  }
+
+  .chart-box {
+    height: 240px;
+  }
 }
-
-.chart-header{
-
-    flex-direction:column;
-    align-items:flex-start;
-    gap:14px;
-
-}
-
-.chart-header h3{
-    font-size:18px;
-}
-
-.chart-header select{
-    width:100%;
-}
-
-.chart-box{
-    height:240px;
-}
-
-}
-
 
 /* ---------- Small Phones ---------- */
 
-@media (max-width:480px){
+@media (max-width: 480px) {
+  .expense-chart {
+    padding: 16px;
+  }
 
-.expense-chart{
-    padding:16px;
-}
+  .chart-box {
+    height: 210px;
+  }
 
-.chart-box{
-    height:210px;
-}
-
-.chart-header h3{
-    font-size:17px;
-}
-
+  .chart-header h3 {
+    font-size: 17px;
+  }
 }

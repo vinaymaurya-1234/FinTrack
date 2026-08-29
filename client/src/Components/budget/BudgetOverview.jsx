@@ -1,17 +1,9 @@
 import { useEffect, useState } from "react";
 import "./BudgetOverview.css";
 
-function BudgetOverview() {
+function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budget, setBudget] = useState(null);
   const [transactions, setTransactions] = useState([]);
-
-  const currentDate = new Date();
-
-  const selectedMonth = currentDate.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  const selectedYear = currentDate.getFullYear();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,67 +12,76 @@ function BudgetOverview() {
 
         if (!token) return;
 
+        // Selected month ka budget
         const budgetResponse = await fetch(
           `http://localhost:5000/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         const budgetData = await budgetResponse.json();
 
         if (budgetResponse.ok) {
           setBudget(budgetData.budget || budgetData);
+        } else {
+          setBudget(null);
         }
 
+        // All transactions
         const transactionResponse = await fetch(
           "http://localhost:5000/api/transactions",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         const transactionData = await transactionResponse.json();
 
         if (transactionResponse.ok) {
           setTransactions(transactionData);
+        } else {
+          setTransactions([]);
         }
       } catch (error) {
         console.error("Error fetching overview data:", error);
+        setBudget(null);
+        setTransactions([]);
       }
     };
 
     fetchData();
   }, [selectedMonth, selectedYear]);
 
+  // IMPORTANT:
+  // Current date use NAHI karna hai.
+  // Parent se jo month/year aaya hai wahi use hoga.
+
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
 
     return (
-      transactionDate.getMonth() === currentDate.getMonth() &&
-      transactionDate.getFullYear() === currentDate.getFullYear()
+      transactionDate.getMonth() === selectedMonthIndex &&
+      transactionDate.getFullYear() === selectedYear
     );
   });
 
   const totalSpent = selectedMonthTransactions
     .filter((transaction) => transaction.type === "Expense")
-    .reduce(
-      (total, transaction) => total + Number(transaction.amount),
-      0
-    );
+    .reduce((total, transaction) => {
+      return total + Number(transaction.amount);
+    }, 0);
 
   const totalBudget = budget ? Number(budget.amount) : 0;
 
   const totalRemaining = totalBudget - totalSpent;
 
   const usedPercentage =
-    totalBudget > 0
-      ? Math.min((totalSpent / totalBudget) * 100, 100)
-      : 0;
+    totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
 
   return (
     <div className="budget-overview">
@@ -105,15 +106,13 @@ function BudgetOverview() {
             style={{
               width: `${usedPercentage}%`,
             }}
-          ></div>
+          />
         </div>
 
         <div className="budget-progress-info">
           <span>{usedPercentage.toFixed(0)}% Used</span>
 
-          <span>
-            ₹{Math.max(totalRemaining, 0).toLocaleString()} Left
-          </span>
+          <span>₹{Math.max(totalRemaining, 0).toLocaleString()} Left</span>
         </div>
       </div>
 
@@ -131,6 +130,7 @@ function BudgetOverview() {
           }}
         >
           <h2>{usedPercentage.toFixed(0)}%</h2>
+
           <span>of budget</span>
           <span>used</span>
         </div>
@@ -173,8 +173,8 @@ function BudgetOverview() {
         <div className="wallet-icon">💼</div>
 
         <p>
-          “A budget is telling your money where to go instead of wondering
-          where it went.”
+          “A budget is telling your money where to go instead of wondering where
+          it went.”
         </p>
       </div>
     </div>

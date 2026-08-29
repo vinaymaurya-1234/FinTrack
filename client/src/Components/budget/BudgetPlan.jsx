@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import BudgetRow from "./BudgetRow";
 import "./BudgetPlan.css";
 
-function BudgetPlan() {
+function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budgetCategories, setBudgetCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -10,14 +10,7 @@ function BudgetPlan() {
   const [categoryName, setCategoryName] = useState("");
   const [categoryAmount, setCategoryAmount] = useState("");
 
-  const currentDate = new Date();
-
-  const selectedMonth = currentDate.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  const selectedYear = currentDate.getFullYear();
-
+  // Fetch selected month data
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -31,7 +24,7 @@ function BudgetPlan() {
       const [categoryResponse, transactionResponse] = await Promise.all([
         fetch(
           `http://localhost:5000/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
-          { headers }
+          { headers },
         ),
         fetch("http://localhost:5000/api/transactions", {
           headers,
@@ -43,26 +36,36 @@ function BudgetPlan() {
 
       if (categoryResponse.ok) {
         setBudgetCategories(categoryData);
+      } else {
+        setBudgetCategories([]);
       }
 
       if (transactionResponse.ok) {
         setTransactions(transactionData);
+      } else {
+        setTransactions([]);
       }
     } catch (error) {
       console.error("Error fetching budget plan:", error);
+
+      setBudgetCategories([]);
+      setTransactions([]);
     }
   };
 
+  // Selected month/year change hone par data fetch hoga
   useEffect(() => {
     fetchData();
   }, [selectedMonth, selectedYear]);
 
+  // IMPORTANT:
+  // Parent se aaye selected month/year ke according transactions filter karo
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
 
     return (
-      transactionDate.getMonth() === currentDate.getMonth() &&
-      transactionDate.getFullYear() === currentDate.getFullYear()
+      transactionDate.getMonth() === selectedMonthIndex &&
+      transactionDate.getFullYear() === selectedYear
     );
   });
 
@@ -71,12 +74,9 @@ function BudgetPlan() {
       .filter(
         (transaction) =>
           transaction.type === "Expense" &&
-          transaction.category.toLowerCase() === category.toLowerCase()
+          transaction.category.toLowerCase() === category.toLowerCase(),
       )
-      .reduce(
-        (total, transaction) => total + Number(transaction.amount),
-        0
-      );
+      .reduce((total, transaction) => total + Number(transaction.amount), 0);
   };
 
   const getCategoryIcon = (category) => {
@@ -107,21 +107,31 @@ function BudgetPlan() {
     try {
       const token = localStorage.getItem("token");
 
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+
       const response = await fetch(
         "http://localhost:5000/api/budget-categories",
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+
           body: JSON.stringify({
             category: categoryName,
             amount: Number(categoryAmount),
+
+            // IMPORTANT:
+            // Selected month/year me category save hogi
             month: selectedMonth,
             year: selectedYear,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -130,6 +140,7 @@ function BudgetPlan() {
         setShowCategoryModal(false);
         setCategoryName("");
         setCategoryAmount("");
+
         fetchData();
       } else {
         alert(data.message);
@@ -143,14 +154,17 @@ function BudgetPlan() {
     try {
       const token = localStorage.getItem("token");
 
+      if (!token) return;
+
       const response = await fetch(
         `http://localhost:5000/api/budget-categories/${categoryId}`,
         {
           method: "DELETE",
+
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -185,12 +199,11 @@ function BudgetPlan() {
           {budgetCategories.length > 0 ? (
             budgetCategories.map((category) => {
               const spent = getCategorySpent(category.category);
+
               const categoryBudget = Number(category.amount);
 
               const actualProgress =
-                categoryBudget > 0
-                  ? (spent / categoryBudget) * 100
-                  : 0;
+                categoryBudget > 0 ? (spent / categoryBudget) * 100 : 0;
 
               const remaining = categoryBudget - spent;
 
@@ -213,7 +226,7 @@ function BudgetPlan() {
                 textAlign: "center",
               }}
             >
-              No budget categories added yet.
+              No budget categories added for {selectedMonth} {selectedYear}.
             </p>
           )}
         </div>
@@ -226,12 +239,16 @@ function BudgetPlan() {
         </button>
       </div>
 
+      {/* ADD CATEGORY MODAL */}
+
       {showCategoryModal && (
         <div className="budget-modal-overlay">
           <div className="budget-modal">
             <h2>Add Budget Category</h2>
 
-            <p>Allocate a part of your monthly budget.</p>
+            <p>
+              Allocate a part of your budget for {selectedMonth} {selectedYear}.
+            </p>
 
             <input
               type="text"
@@ -259,16 +276,15 @@ function BudgetPlan() {
                 Cancel
               </button>
 
-              <button
-                className="save-budget-btn"
-                onClick={addBudgetCategory}
-              >
+              <button className="save-budget-btn" onClick={addBudgetCategory}>
                 Add Category
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* MANAGE CATEGORY MODAL */}
 
       {showManageCategories && (
         <div className="modal-overlay">
@@ -297,16 +313,11 @@ function BudgetPlan() {
                 </p>
               ) : (
                 budgetCategories.map((item) => (
-                  <div
-                    className="manage-category-item"
-                    key={item._id}
-                  >
+                  <div className="manage-category-item" key={item._id}>
                     <div>
                       <h4>{item.category}</h4>
 
-                      <p>
-                        ₹{Number(item.amount).toLocaleString("en-IN")}
-                      </p>
+                      <p>₹{Number(item.amount).toLocaleString("en-IN")}</p>
                     </div>
 
                     <button

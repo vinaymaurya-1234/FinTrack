@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import SpendingItem from "./SpendingItem";
 import "./RecentSpending.css";
 
-function RecentSpending() {
+function RecentSpending({ selectedMonthIndex, selectedYear }) {
   const [transactions, setTransactions] = useState([]);
   const navigate = useNavigate();
 
@@ -14,14 +14,11 @@ function RecentSpending() {
 
         if (!token) return;
 
-        const response = await fetch(
-          "http://localhost:5000/api/transactions",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch("http://localhost:5000/api/transactions", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await response.json();
 
@@ -38,16 +35,21 @@ function RecentSpending() {
     fetchTransactions();
   }, []);
 
-  const currentDate = new Date();
-
+  // Selected Month + Year ke according transactions filter
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
 
     return (
-      transactionDate.getMonth() === currentDate.getMonth() &&
-      transactionDate.getFullYear() === currentDate.getFullYear()
+      transactionDate.getMonth() === selectedMonthIndex &&
+      transactionDate.getFullYear() === selectedYear
     );
   });
+
+  // Sirf expenses
+  const expenseTransactions = selectedMonthTransactions
+    .filter((transaction) => transaction.type === "Expense")
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 6);
 
   const getCategoryIcon = (category) => {
     const name = category.toLowerCase();
@@ -73,15 +75,13 @@ function RecentSpending() {
       <div className="section-header">
         <h3>Recent Spending</h3>
 
-        <button onClick={() => navigate("/transactions")}>
-          View All
-        </button>
+        <button onClick={() => navigate("/transactions")}>View All</button>
       </div>
 
-      {selectedMonthTransactions
-        .filter((transaction) => transaction.type === "Expense")
-        .slice(0, 6)
-        .map((transaction) => (
+      {expenseTransactions.length === 0 ? (
+        <p className="no-recent-transactions">No transactions found</p>
+      ) : (
+        expenseTransactions.map((transaction) => (
           <SpendingItem
             key={transaction._id}
             icon={getCategoryIcon(transaction.category)}
@@ -90,7 +90,8 @@ function RecentSpending() {
             amount={`- ₹${Number(transaction.amount).toLocaleString()}`}
             date={new Date(transaction.date).toLocaleDateString()}
           />
-        ))}
+        ))
+      )}
     </div>
   );
 }

@@ -1,43 +1,53 @@
 import "./Budget.css";
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 import BudgetOverview from "../Components/budget/BudgetOverview";
 import BudgetInsights from "../Components/budget/BudgetInsights";
 import BudgetPlan from "../Components/budget/BudgetPlan";
 import RecentSpending from "../Components/budget/RecentSpending";
 
 function Budget() {
+  const navigate = useNavigate();
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonthIndex = currentDate.getMonth();
+
+  // Modal states
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
+
+  // Month picker
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState(
-    new Date().getMonth()
-  );
+  // Actual applied month/year
+  // Page initially current month show karega
+  const [selectedMonthIndex, setSelectedMonthIndex] =
+    useState(currentMonthIndex);
 
-  const [selectedYear, setSelectedYear] = useState(
-    new Date().getFullYear()
-  );
+  const [selectedYear, setSelectedYear] = useState(currentYear);
 
-  const currentDate = new Date();
+  // Temporary month/year
+  // Dropdown ke andar use hoga
+  const [tempMonthIndex, setTempMonthIndex] = useState(currentMonthIndex);
+
+  const [tempYear, setTempYear] = useState(currentYear);
+
+  // Current month name
   const currentMonth = currentDate.toLocaleString("en-US", {
     month: "long",
   });
-  const currentYear = currentDate.getFullYear();
 
+  // Applied selected month name
   const selectedMonth = new Date(
     selectedYear,
-    selectedMonthIndex
+    selectedMonthIndex,
   ).toLocaleString("en-US", {
     month: "long",
   });
 
-  const nextDate = new Date(
-    currentYear,
-    currentDate.getMonth() + 1,
-    1
-  );
+  // Next month
+  const nextDate = new Date(currentYear, currentMonthIndex + 1, 1);
 
   const nextMonth = nextDate.toLocaleString("en-US", {
     month: "long",
@@ -45,10 +55,11 @@ function Budget() {
 
   const nextYear = nextDate.getFullYear();
 
+  // Budget periods
   const budgetPeriods = [
     {
-      month: selectedMonth,
-      year: selectedYear,
+      month: currentMonth,
+      year: currentYear,
       label: `${currentMonth} ${currentYear}`,
     },
     {
@@ -73,6 +84,7 @@ function Budget() {
     "December",
   ];
 
+  // Save Budget
   const saveBudget = async () => {
     if (!amount || !selectedPeriod) {
       alert("Please enter amount and select a budget period");
@@ -87,7 +99,7 @@ function Budget() {
     }
 
     const selectedBudget = budgetPeriods.find(
-      (period) => period.label === selectedPeriod
+      (period) => period.label === selectedPeriod,
     );
 
     try {
@@ -121,14 +133,35 @@ function Budget() {
     }
   };
 
+  // Close modal
   const closeModal = () => {
     setShowModal(false);
     setAmount("");
     setSelectedPeriod("");
   };
 
+  // Open month picker
+  const handleMonthPicker = () => {
+    // Current applied value temporary state me set karo
+    setTempMonthIndex(selectedMonthIndex);
+    setTempYear(selectedYear);
+
+    setShowMonthPicker(!showMonthPicker);
+  };
+
+  // Apply selected month/year
+  const applyMonthFilter = () => {
+    // Actual page data ab change hoga
+    setSelectedMonthIndex(tempMonthIndex);
+    setSelectedYear(tempYear);
+
+    setShowMonthPicker(false);
+  };
+
   return (
     <div className="budget-page">
+      {/* ================= TOP SECTION ================= */}
+
       <div className="budget-top">
         <div>
           <h2>Budget</h2>
@@ -136,31 +169,29 @@ function Budget() {
         </div>
 
         <div className="budget-top-actions">
-          <button
-            className="add-budget-btn"
-            onClick={() => setShowModal(true)}
-          >
+          {/* ADD BUDGET BUTTON */}
+
+          <button className="add-budget-btn" onClick={() => setShowModal(true)}>
             + Add Budget
           </button>
 
+          {/* MONTH SELECTOR */}
+
           <div className="month-selector">
-            <button
-              className="month-btn"
-              onClick={() => setShowMonthPicker(!showMonthPicker)}
-            >
+            <button className="month-btn" onClick={handleMonthPicker}>
               📅 {selectedMonth} {selectedYear} ▼
             </button>
 
             {showMonthPicker && (
               <div className="month-picker-dropdown">
+                {/* MONTH */}
+
                 <div className="picker-group">
                   <label>Month</label>
 
                   <select
-                    value={selectedMonthIndex}
-                    onChange={(e) =>
-                      setSelectedMonthIndex(Number(e.target.value))
-                    }
+                    value={tempMonthIndex}
+                    onChange={(e) => setTempMonthIndex(Number(e.target.value))}
                   >
                     {months.map((month, index) => (
                       <option key={month} value={index}>
@@ -170,14 +201,14 @@ function Budget() {
                   </select>
                 </div>
 
+                {/* YEAR */}
+
                 <div className="picker-group">
                   <label>Year</label>
 
                   <select
-                    value={selectedYear}
-                    onChange={(e) =>
-                      setSelectedYear(Number(e.target.value))
-                    }
+                    value={tempYear}
+                    onChange={(e) => setTempYear(Number(e.target.value))}
                   >
                     {Array.from({ length: 11 }, (_, index) => {
                       const year = currentYear - 5 + index;
@@ -191,10 +222,9 @@ function Budget() {
                   </select>
                 </div>
 
-                <button
-                  className="apply-month-btn"
-                  onClick={() => setShowMonthPicker(false)}
-                >
+                {/* APPLY */}
+
+                <button className="apply-month-btn" onClick={applyMonthFilter}>
                   Apply
                 </button>
               </div>
@@ -202,6 +232,8 @@ function Budget() {
           </div>
         </div>
       </div>
+
+      {/* ================= ADD BUDGET MODAL ================= */}
 
       {showModal && (
         <div className="budget-modal-overlay">
@@ -235,10 +267,7 @@ function Budget() {
                 Cancel
               </button>
 
-              <button
-                className="save-budget-btn"
-                onClick={saveBudget}
-              >
+              <button className="save-budget-btn" onClick={saveBudget}>
                 Save Budget
               </button>
             </div>
@@ -246,16 +275,41 @@ function Budget() {
         </div>
       )}
 
-      <BudgetOverview />
+      {/* ================= BUDGET OVERVIEW ================= */}
+
+      <BudgetOverview
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        selectedMonthIndex={selectedMonthIndex}
+      />
+
+      {/* ================= MAIN CONTENT ================= */}
 
       <div className="budget-content">
+        {/* LEFT SIDE */}
+
         <div className="left-content">
-          <BudgetInsights />
-          <BudgetPlan />
+          <BudgetInsights
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            selectedMonthIndex={selectedMonthIndex}
+          />
+
+          <BudgetPlan
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            selectedMonthIndex={selectedMonthIndex}
+          />
         </div>
 
+        {/* RIGHT SIDE */}
+
         <div className="right-content">
-          <RecentSpending />
+          <RecentSpending
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            selectedMonthIndex={selectedMonthIndex}
+          />
 
           <div className="goal-suggestion">
             <div className="goal-icon">◎</div>
@@ -264,11 +318,12 @@ function Budget() {
               <h3>Goal Suggestion</h3>
 
               <p>
-                You can save more money this month by optimizing your
-                expenses.
+                You can save more money this month by optimizing your expenses.
               </p>
 
-              <button>Set Savings Goal</button>
+              <button onClick={() => navigate("/goals")}>
+                Set Savings Goal
+              </button>
             </div>
           </div>
         </div>

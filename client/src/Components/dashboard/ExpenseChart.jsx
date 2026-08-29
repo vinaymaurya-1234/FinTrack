@@ -1,31 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import "./ExpenseChart.css";
-import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 
 function ExpenseChart() {
   const [period, setPeriod] = useState("year");
+  const [transactions, setTransactions] = useState([]);
 
-  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  // Fetch transactions from backend
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    axios
+      .get("http://localhost:5000/api/transactions", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setTransactions(response.data);
+      })
+      .catch((error) => {
+        console.log("Error fetching transactions:", error);
+      });
+  }, []);
 
   const expenseTransactions = transactions.filter(
     (transaction) => transaction.type === "Expense",
   );
 
+  const getAmount = (transaction) => {
+    return Number(transaction.amount) || 0;
+  };
+
   let chartData = [];
 
+  // =========================
   // THIS WEEK
+  // =========================
   if (period === "week") {
     const today = new Date();
 
     chartData = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date();
+      const date = new Date(today);
+
       date.setDate(today.getDate() - (6 - index));
 
-      const dateString = date.toISOString().split("T")[0];
-
       const totalExpense = expenseTransactions
-        .filter((transaction) => transaction.date === dateString)
-        .reduce((total, transaction) => total + transaction.amount, 0);
+        .filter((transaction) => {
+          const transactionDate = new Date(transaction.date);
+
+          return (
+            transactionDate.getFullYear() === date.getFullYear() &&
+            transactionDate.getMonth() === date.getMonth() &&
+            transactionDate.getDate() === date.getDate()
+          );
+        })
+        .reduce((total, transaction) => total + getAmount(transaction), 0);
 
       return {
         month: date.toLocaleDateString("en-IN", {
@@ -36,9 +75,12 @@ function ExpenseChart() {
     });
   }
 
+  // =========================
   // THIS MONTH
+  // =========================
   else if (period === "month") {
     const today = new Date();
+
     const year = today.getFullYear();
     const month = today.getMonth();
 
@@ -47,14 +89,17 @@ function ExpenseChart() {
     chartData = Array.from({ length: daysInMonth }, (_, index) => {
       const day = index + 1;
 
-      const dateString = `${year}-${String(month + 1).padStart(
-        2,
-        "0",
-      )}-${String(day).padStart(2, "0")}`;
-
       const totalExpense = expenseTransactions
-        .filter((transaction) => transaction.date === dateString)
-        .reduce((total, transaction) => total + transaction.amount, 0);
+        .filter((transaction) => {
+          const transactionDate = new Date(transaction.date);
+
+          return (
+            transactionDate.getFullYear() === year &&
+            transactionDate.getMonth() === month &&
+            transactionDate.getDate() === day
+          );
+        })
+        .reduce((total, transaction) => total + getAmount(transaction), 0);
 
       return {
         month: day,
@@ -63,7 +108,9 @@ function ExpenseChart() {
     });
   }
 
+  // =========================
   // THIS YEAR
+  // =========================
   else {
     const year = new Date().getFullYear();
 
@@ -77,7 +124,7 @@ function ExpenseChart() {
             transactionDate.getMonth() === index
           );
         })
-        .reduce((total, transaction) => total + transaction.amount, 0);
+        .reduce((total, transaction) => total + getAmount(transaction), 0);
 
       return {
         month: new Date(year, index).toLocaleString("en-IN", {
@@ -101,13 +148,29 @@ function ExpenseChart() {
       </div>
 
       <div className="chart-box">
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={chartData}>
-            <XAxis dataKey="month" />
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={chartData}
+            margin={{
+              top: 15,
+              right: 20,
+              left: 10,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
+            <XAxis dataKey="month" axisLine={false} tickLine={false} />
+
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(value) => `₹${value}`}
+            />
 
             <Tooltip
               formatter={(value) => [
-                `₹${value.toLocaleString("en-IN")}`,
+                `₹${Number(value).toLocaleString("en-IN")}`,
                 "Expense",
               ]}
             />
@@ -118,6 +181,8 @@ function ExpenseChart() {
               stroke="#6D5EF8"
               fill="#6D5EF8"
               fillOpacity={0.2}
+              strokeWidth={3}
+              activeDot={{ r: 6 }}
             />
           </AreaChart>
         </ResponsiveContainer>
