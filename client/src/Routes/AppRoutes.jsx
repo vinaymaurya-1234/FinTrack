@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import Dashboard from "../pages/Dashboard";
-import MainLayout from "../Components/layout/Mainlayout";
+import MainLayout from "../Components/layout/MainLayout";
 import Transactions from "../pages/Transactions";
 import Budget from "../pages/Budget";
 import Reports from "../pages/Reports";
