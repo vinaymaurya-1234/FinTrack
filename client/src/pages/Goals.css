@@ -597,33 +597,46 @@
   background: #5948df;
 }
 
-/* TOAST */
+/* ================= TOAST FIX ================= */
 
 .goal-toast {
   position: fixed;
-  top: 50%;
+  top: 16px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2000;
-  padding: 14px 24px;
-  border-radius: 10px;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+
+  padding: 10px 16px;
+
+  border-radius: 8px;
   background: #1f2937;
   color: #fff;
-  font-size: 14px;
+
+  font-size: 13px;
   font-weight: 500;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  line-height: 1.2;
+
+  white-space: nowrap;
+  text-align: center;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+
   animation: toastShow 0.25s ease;
 }
 
 @keyframes toastShow {
   from {
     opacity: 0;
-    transform: translate(-50%, -45%);
+    transform: translate(-50%, -10px);
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
   }
 }
 
@@ -728,11 +741,24 @@
     width: 100%;
   }
 
+  /* Toast mobile par bhi top center me rahega */
   .goal-toast {
-    right: 12px;
-    bottom: 12px;
-    left: 12px;
-    max-width: none;
+    top: 12px;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+
+    transform: translateX(-50%);
+
+    width: fit-content;
+    max-width: calc(100vw - 20px);
+
+    padding: 9px 14px;
+
+    font-size: 12px;
+    line-height: 1.2;
+
+    white-space: nowrap;
     text-align: center;
   }
 }
@@ -753,5 +779,11 @@
   .add-money-btn,
   .release-money-btn {
     width: 100%;
+  }
+
+  .goal-toast {
+    max-width: calc(100vw - 16px);
+    font-size: 11px;
+    padding: 8px 10px;
   }
 }
