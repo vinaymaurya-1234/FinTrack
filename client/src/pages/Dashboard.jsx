@@ -14,7 +14,7 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("token");
 
-      await axios.post(`${API_URL}/transactions`, newTransaction, {
+      await axios.post(`${API_URL}/api/transactions`, newTransaction, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
