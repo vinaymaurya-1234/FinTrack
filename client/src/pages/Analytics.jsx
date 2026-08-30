@@ -18,7 +18,7 @@ function Analytics() {
   useEffect(() => {
     const getTransactions = async () => {
       try {
-        const response = await axios.get(`${API_URL}/transactions`, config);
+        const response = await axios.get(`${API_URL}/api/transactions`, config);
 
         setTransactions(
           Array.isArray(response.data)
