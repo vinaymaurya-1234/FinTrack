@@ -444,3 +444,47 @@
   outline: 2px solid #6d5ef8;
   outline-offset: 2px;
 }
+
+/* =========================
+   VOICE BUTTON
+========================= */
+
+.voice-nav-btn {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 50%;
+  background: #f5f3ff;
+  color: #635bff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-nav-btn:hover {
+  background: #e9e6ff;
+  transform: translateY(-1px);
+}
+
+.voice-nav-btn.listening {
+  background: #ffe8e8;
+  color: #e53935;
+  animation: voicePulse 1s infinite;
+}
+
+@keyframes voicePulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

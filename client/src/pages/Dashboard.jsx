@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Dashboard.css";
 import { API_URL } from "../api";
@@ -9,6 +9,21 @@ import RecentTransactions from "../Components/dashboard/RecentTransactions";
 
 function Dashboard() {
   const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    const handleTransactionUpdated = () => {
+      setRefresh((prev) => prev + 1);
+    };
+
+    window.addEventListener("transactionUpdated", handleTransactionUpdated);
+
+    return () => {
+      window.removeEventListener(
+        "transactionUpdated",
+        handleTransactionUpdated,
+      );
+    };
+  }, []);
 
   const handleAddTransaction = async (newTransaction) => {
     try {
@@ -29,8 +44,6 @@ function Dashboard() {
   return (
     <div className="dashboard-page">
       <div className="dashboard-header">
-        {/* <h1>Dashboard</h1> */}
-
         <AddTransaction onSave={handleAddTransaction} />
       </div>
 
