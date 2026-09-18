@@ -1,7 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const OpenAI = require("openai");
-const { toFile } = require("openai");
+const Groq = require("groq-sdk");
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -10,8 +9,8 @@ const upload = multer({
   storage: multer.memoryStorage(),
 });
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 router.post("/", protect, upload.single("audio"), async (req, res) => {
@@ -24,17 +23,11 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
 
     console.log("🎤 Audio received by backend");
 
-    const audioFile = await toFile(
-      req.file.buffer,
-      req.file.originalname,
-      {
+    const transcription = await groq.audio.transcriptions.create({
+      file: new File([req.file.buffer], req.file.originalname, {
         type: req.file.mimetype,
-      }
-    );
-
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
-      model: "gpt-4o-mini-transcribe",
+      }),
+      model: "whisper-large-v3-turbo",
     });
 
     console.log("🗣️ Transcription:", transcription.text);
