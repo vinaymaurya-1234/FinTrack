@@ -2,6 +2,7 @@ const express = require("express");
 const Transaction = require("../models/Transaction");
 const Goal = require("../models/Goal");
 const protect = require("../middleware/authMiddleware");
+const { createTransaction } = require("../services/TransactionServices");
 
 const router = express.Router();
 
@@ -34,49 +35,28 @@ const getAvailableBalance = async (userId, excludeId = null) => {
 router.post("/", protect, async (req, res) => {
   try {
     const { category, type, amount, date } = req.body;
-    const transactionAmount = Number(amount);
 
-    if (!category || !type || !date || !transactionAmount) {
-      return res.status(400).json({
-        message: "All transaction fields are required",
-      });
-    }
-
-    if (!["Income", "Expense"].includes(type)) {
-      return res.status(400).json({
-        message: "Invalid transaction type",
-      });
-    }
-
-    if (transactionAmount <= 0) {
-      return res.status(400).json({
-        message: "Amount must be greater than 0",
-      });
-    }
-
-    if (type === "Expense") {
-      const availableBalance = await getAvailableBalance(req.user._id);
-
-      if (transactionAmount > availableBalance) {
-        return res.status(400).json({
-          message: `Insufficient available balance. Available: ₹${Math.max(
-            0,
-            availableBalance,
-          ).toLocaleString("en-IN")}`,
-        });
-      }
-    }
-
-    const transaction = await Transaction.create({
-      user: req.user._id,
+    const transaction = await createTransaction({
+      userId: req.user._id,
       category,
       type,
-      amount: transactionAmount,
+      amount,
       date,
     });
 
     res.status(201).json(transaction);
   } catch (error) {
+    if (
+      error.message === "All transaction fields are required" ||
+      error.message === "Invalid transaction type" ||
+      error.message === "Amount must be greater than 0" ||
+      error.message.startsWith("Insufficient available balance")
+    ) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       message: "Error creating transaction",
       error: error.message,

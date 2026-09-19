@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const Groq = require("groq-sdk");
 const protect = require("../middleware/authMiddleware");
+const { createTransaction } = require("../services/TransactionServices");
 
 const router = express.Router();
 
@@ -85,22 +86,51 @@ Rules:
 
     console.log("🤖 AI Parsed Command:", parsedCommand);
 
-    // IMPORTANT:
-    // Abhi transaction create nahi kar rahe.
-    // Sirf AI parsing test kar rahe hain.
+
+    // STEP 3: Execute the AI command
+
+    if (parsedCommand.action === "add") {
+      const transaction = await createTransaction({
+        userId: req.user._id,
+        category: parsedCommand.category,
+        type: parsedCommand.type,
+        amount: parsedCommand.amount,
+        date: new Date(),
+      });
+
+      console.log("💰 Voice transaction created:", transaction);
+
+      return res.status(201).json({
+        message: "Voice transaction added successfully.",
+        text: text,
+        command: parsedCommand,
+        transaction: transaction,
+      });
+    }
 
     return res.status(200).json({
-      message: "Voice command parsed successfully.",
+      message: "Command parsed successfully, but no transaction was created.",
       text: text,
       command: parsedCommand,
     });
-  } catch (error) {
-    console.error("Voice command error:", error);
+ } catch (error) {
+  console.error("Voice command error:", error);
 
-    return res.status(500).json({
-      message: "Voice command failed.",
+  if (
+    error.message === "All transaction fields are required" ||
+    error.message === "Invalid transaction type" ||
+    error.message === "Amount must be greater than 0" ||
+    error.message.startsWith("Insufficient available balance")
+  ) {
+    return res.status(400).json({
+      message: error.message,
     });
   }
+
+  return res.status(500).json({
+    message: "Voice command failed.",
+  });
+}
 });
 
 module.exports = router;
