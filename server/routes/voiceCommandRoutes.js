@@ -37,7 +37,7 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
 
     // STEP 2: Text → Structured command
     const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: "openai/gpt-oss-20b",
       messages: [
         {
           role: "system",
