@@ -137,7 +137,7 @@ function Navbar({ isOpen, setIsOpen }) {
 
           console.log("🎤 Backend response:", data);
 
-          alert(data.message || "Audio sent successfully.");
+          alert(`Transcription: ${data.text || "No text detected"}`);
         } catch (error) {
           console.error("Audio upload error:", error);
 
@@ -229,4 +229,3 @@ function Navbar({ isOpen, setIsOpen }) {
 }
 
 export default Navbar;
-  
