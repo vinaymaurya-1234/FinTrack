@@ -1,35 +1,12 @@
 const express = require("express");
 const Transaction = require("../models/Transaction");
-const Goal = require("../models/Goal");
 const protect = require("../middleware/authMiddleware");
-const { createTransaction } = require("../services/TransactionServices");
+const {
+  createTransaction,
+  updateTransaction,
+} = require("../services/TransactionServices");
 
 const router = express.Router();
-
-const getAvailableBalance = async (userId, excludeId = null) => {
-  const query = { user: userId };
-
-  if (excludeId) {
-    query._id = { $ne: excludeId };
-  }
-
-  const transactions = await Transaction.find(query);
-  const goals = await Goal.find({ userId });
-
-  const income = transactions
-    .filter((t) => t.type === "Income")
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const expenses = transactions
-    .filter((t) => t.type === "Expense")
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const balance = income - expenses;
-
-  const locked = goals.reduce((sum, goal) => sum + Number(goal.savedAmount), 0);
-
-  return balance - locked;
-};
 
 // ADD TRANSACTION
 router.post("/", protect, async (req, res) => {
@@ -109,62 +86,39 @@ router.delete("/:id", protect, async (req, res) => {
 router.put("/:id", protect, async (req, res) => {
   try {
     const { category, type, amount, date } = req.body;
-    const transactionAmount = Number(amount);
 
-    if (!category || !type || !date || !transactionAmount) {
-      return res.status(400).json({
-        message: "All transaction fields are required",
-      });
-    }
-
-    if (!["Income", "Expense"].includes(type)) {
-      return res.status(400).json({
-        message: "Invalid transaction type",
-      });
-    }
-
-    if (transactionAmount <= 0) {
-      return res.status(400).json({
-        message: "Amount must be greater than 0",
-      });
-    }
-
-    const transaction = await Transaction.findOne({
-      _id: req.params.id,
-      user: req.user._id,
+    const transaction = await updateTransaction({
+      userId: req.user._id,
+      target: {
+        id: req.params.id,
+      },
+      changes: {
+        category,
+        type,
+        amount,
+        date,
+      },
     });
-
-    if (!transaction) {
-      return res.status(404).json({
-        message: "Transaction not found",
-      });
-    }
-
-    if (type === "Expense") {
-      const availableBalance = await getAvailableBalance(
-        req.user._id,
-        transaction._id,
-      );
-
-      if (transactionAmount > availableBalance) {
-        return res.status(400).json({
-          message: `Insufficient available balance. Available: ₹${Math.max(
-            0,
-            availableBalance,
-          ).toLocaleString("en-IN")}`,
-        });
-      }
-    }
-
-    transaction.category = category;
-    transaction.type = type;
-    transaction.amount = transactionAmount;
-    transaction.date = date;
-
-    await transaction.save();
 
     res.status(200).json(transaction);
   } catch (error) {
+    if (
+      error.message === "All transaction fields are required" ||
+      error.message === "Invalid transaction type" ||
+      error.message === "Amount must be greater than 0" ||
+      error.message.startsWith("Insufficient available balance")
+    ) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    if (error.message === "Transaction not found") {
+      return res.status(404).json({
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       message: "Error updating transaction",
       error: error.message,

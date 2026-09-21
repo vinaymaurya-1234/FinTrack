@@ -2,7 +2,10 @@ const express = require("express");
 const multer = require("multer");
 const Groq = require("groq-sdk");
 const protect = require("../middleware/authMiddleware");
-const { createTransaction } = require("../services/TransactionServices");
+const {
+  createTransaction,
+  updateTransaction,
+} = require("../services/TransactionServices");
 
 const router = express.Router();
 
@@ -39,13 +42,21 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
     // STEP 2: Text → Structured command
     const completion = await groq.chat.completions.create({
       model: "openai/gpt-oss-20b",
+
       messages: [
         {
           role: "system",
           content: `
-You are a finance command parser.
+You are a finance command parser for a personal finance application.
 
-Convert the user's voice command into JSON.
+Convert the user's voice command into EXACTLY ONE JSON OBJECT.
+
+IMPORTANT:
+- Never return an array.
+- Return ONLY valid JSON.
+- Understand English, Hindi and Hinglish.
+- Categories are dynamic and unlimited.
+- Do not invent information.
 
 Possible actions:
 - add
@@ -53,22 +64,111 @@ Possible actions:
 - delete
 - query
 
-For transaction commands return:
 
+ADD:
 {
   "action": "add",
   "amount": 200,
-  "category": "Travel",
+  "category": "Food",
   "type": "Expense"
 }
 
 Rules:
-- If money is spent, type = "Expense"
-- If money is received, type = "Income"
-- Extract the amount
-- Extract the category
-- Do not invent missing information
-- Return ONLY valid JSON
+- Money spent = Expense
+- Money received/earned = Income
+- Extract amount and category exactly.
+- Category can be ANY word or phrase.
+
+
+UPDATE:
+{
+  "action": "update",
+  "target": {
+    "category": "Travel",
+    "amount": 300
+  },
+  "changes": {
+    "amount": 150
+  }
+}
+
+Rules:
+- target = EXISTING transaction.
+- changes = NEW values only.
+- Never put new values inside target.
+- Never put old values inside changes.
+- Target can contain category, amount, type.
+- Changes can contain category, amount, type.
+- Include only information actually mentioned.
+- Do not invent missing information.
+
+Examples:
+
+"Travel 300 replaced with 150"
+→
+{
+  "action": "update",
+  "target": {
+    "category": "Travel",
+    "amount": 300
+  },
+  "changes": {
+    "amount": 150
+  }
+}
+
+"Food 200 ko 300 kar do"
+→
+{
+  "action": "update",
+  "target": {
+    "category": "Food",
+    "amount": 200
+  },
+  "changes": {
+    "amount": 300
+  }
+}
+
+"Shopping transaction ko Electronics category kar do"
+→
+{
+  "action": "update",
+  "target": {
+    "category": "Shopping"
+  },
+  "changes": {
+    "category": "Electronics"
+  }
+}
+
+
+DELETE:
+{
+  "action": "delete",
+  "target": {
+    "category": "Food",
+    "amount": 200
+  }
+}
+
+Rules:
+- target identifies the existing transaction.
+- Use category, amount or type only when mentioned.
+
+
+QUERY:
+{
+  "action": "query"
+}
+
+FINAL:
+- Return exactly ONE JSON object.
+- Never return an array.
+- Never invent values.
+- Understand English, Hindi and Hinglish.
+- Categories are completely dynamic.
+- For updates, separate OLD values into target and NEW values into changes.
           `,
         },
         {
@@ -76,7 +176,9 @@ Rules:
           content: text,
         },
       ],
+
       temperature: 0,
+
       response_format: {
         type: "json_object",
       },
@@ -86,9 +188,7 @@ Rules:
 
     console.log("🤖 AI Parsed Command:", parsedCommand);
 
-
-    // STEP 3: Execute the AI command
-
+    // ADD
     if (parsedCommand.action === "add") {
       const transaction = await createTransaction({
         userId: req.user._id,
@@ -102,35 +202,59 @@ Rules:
 
       return res.status(201).json({
         message: "Voice transaction added successfully.",
-        text: text,
+        text,
         command: parsedCommand,
-        transaction: transaction,
+        transaction,
       });
     }
 
+    // UPDATE
+    if (parsedCommand.action === "update") {
+      const transaction = await updateTransaction({
+        userId: req.user._id,
+        target: parsedCommand.target,
+        changes: parsedCommand.changes,
+      });
+
+      console.log("✏️ Voice transaction updated:", transaction);
+
+      return res.status(200).json({
+        message: "Voice transaction updated successfully.",
+        text,
+        command: parsedCommand,
+        transaction,
+      });
+    }
+
+    // DELETE / QUERY - not implemented yet
     return res.status(200).json({
-      message: "Command parsed successfully, but no transaction was created.",
-      text: text,
+      message: "Command parsed successfully.",
+      text,
       command: parsedCommand,
     });
- } catch (error) {
-  console.error("Voice command error:", error);
+  } catch (error) {
+    console.error("Voice command error:", error);
 
-  if (
-    error.message === "All transaction fields are required" ||
-    error.message === "Invalid transaction type" ||
-    error.message === "Amount must be greater than 0" ||
-    error.message.startsWith("Insufficient available balance")
-  ) {
-    return res.status(400).json({
-      message: error.message,
+    if (
+      error.message === "All transaction fields are required" ||
+      error.message === "Invalid transaction type" ||
+      error.message === "Amount must be greater than 0" ||
+      error.message.startsWith("Insufficient available balance") ||
+      error.message === "No matching transaction found" ||
+      error.message ===
+        "Multiple matching transactions found. Please specify the transaction more clearly" ||
+      error.message === "No changes were provided"
+    ) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      message: "Voice command failed.",
+      error: error.message,
     });
   }
-
-  return res.status(500).json({
-    message: "Voice command failed.",
-  });
-}
 });
 
 module.exports = router;
