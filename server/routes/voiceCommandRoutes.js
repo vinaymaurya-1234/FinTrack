@@ -51,21 +51,19 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
           content: `
 You are a finance command parser.
 
-Convert the user's voice command into EXACTLY ONE JSON OBJECT.
+Return EXACTLY ONE JSON OBJECT.
 
-Rules:
-- Return only valid JSON.
-- Never return an array.
-- Understand English, Hindi and Hinglish.
-- Categories are dynamic.
-- Never invent values.
+Understand:
+- English
+- Hindi
+- Hinglish
+- Natural sentence structure
 
-ACTIONS:
-add
-update
-delete
-query
-
+Actions:
+- add
+- update
+- delete
+- query
 
 ADD:
 {
@@ -74,7 +72,6 @@ ADD:
   "category": "Food",
   "type": "Expense"
 }
-
 
 UPDATE:
 {
@@ -88,35 +85,30 @@ UPDATE:
   }
 }
 
-Rules:
-- target = existing values.
-- changes = new values.
-- Do not mix old and new values.
-- Target can contain category, amount, type.
-- Changes can contain category, amount, type.
-
-
 DELETE:
 {
   "action": "delete",
   "target": {
-    "category": "Food",
-    "amount": 200
+    "category": "Travel",
+    "amount": 300
   }
 }
 
-Rules:
+DELETE RULES:
 - target identifies the existing transaction.
-- Use category, amount and type only when mentioned.
-- Never invent missing information.
-
+- Include category if spoken.
+- Include amount if spoken.
+- Include type if spoken.
+- Never invent values.
+- Category can be any word or phrase.
 
 QUERY:
 {
   "action": "query"
 }
 
-Return exactly one JSON object.
+Return ONLY valid JSON.
+Never return an array.
           `,
         },
         {
@@ -177,8 +169,6 @@ Return exactly one JSON object.
         target: parsedCommand.target,
       });
 
-      console.log("🗑️ Delete confirmation required:", transaction);
-
       return res.status(200).json({
         message: "Delete confirmation required.",
         confirmationRequired: true,
@@ -202,26 +192,10 @@ Return exactly one JSON object.
       command: parsedCommand,
     });
   } catch (error) {
-    console.error("Voice command error:", error);
+    console.error("❌ Voice command error:", error);
 
-    if (
-      error.message === "All transaction fields are required" ||
-      error.message === "Invalid transaction type" ||
-      error.message === "Amount must be greater than 0" ||
-      error.message.startsWith("Insufficient available balance") ||
-      error.message === "No matching transaction found" ||
-      error.message.startsWith("Multiple matching transactions") ||
-      error.message === "No changes were provided" ||
-      error.message.startsWith("Please specify which transaction")
-    ) {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-
-    return res.status(500).json({
-      message: "Voice command failed.",
-      error: error.message,
+    return res.status(400).json({
+      message: error.message || "Voice command failed.",
     });
   }
 });
