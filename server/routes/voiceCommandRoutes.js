@@ -23,25 +23,6 @@ const groq = new Groq({
 });
 
 // ======================================================
-// HELPER: CURRENT MONTH / YEAR
-// ======================================================
-
-const getCurrentMonthYear = () => {
-  const now = new Date();
-
-  const month = now.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  const year = now.getFullYear();
-
-  return {
-    month,
-    year,
-  };
-};
-
-// ======================================================
 // NORMALIZE AI COMMAND
 // ======================================================
 
@@ -49,10 +30,6 @@ const normalizeCommand = (command, text) => {
   if (!command || typeof command !== "object") {
     throw new Error("Invalid AI command");
   }
-
-  // ------------------------------------------
-  // NORMALIZE TARGET
-  // ------------------------------------------
 
   if (command.target && typeof command.target === "object") {
     const target = command.target;
@@ -64,144 +41,15 @@ const normalizeCommand = (command, text) => {
         .trim();
     }
 
-    // Detect latest from ORIGINAL transcription.
     const latestPattern =
-      /\b(?:latest|last|most\s+recent|abhi\s+(?:wala|wali|waala|waali)|last\s+(?:wala|wali)|sabse\s+(?:recent|latest))\b/i;
+      /\b(?:latest|last|most\s+recent|abhi\s+(?:wala|wali|waala|waali)|sabse\s+recent|sabse\s+latest)\b/i;
 
     if (latestPattern.test(text || "")) {
       target.latest = true;
     }
   }
 
-  // ------------------------------------------
-  // NORMALIZE ADD CATEGORY
-  // ------------------------------------------
-
-  if (command.action === "add_category") {
-    if (typeof command.category === "string") {
-      command.category = command.category
-        .replace(
-          /^(?:add|create|make|set)\s+(?:a\s+)?(?:budget\s+)?category\s+/i,
-          "",
-        )
-        .trim();
-    }
-
-    command.amount = Number(command.amount);
-
-    if (!Number.isFinite(command.amount)) {
-      command.amount = null;
-    }
-  }
-
   return command;
-};
-
-// ======================================================
-// ADD BUDGET CATEGORY
-// ======================================================
-
-const addBudgetCategory = async ({ userId, category, amount, month, year }) => {
-  if (!category || typeof category !== "string") {
-    throw new Error("Budget category name is required");
-  }
-
-  const numericAmount = Number(amount);
-
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    throw new Error("Budget category amount must be greater than 0");
-  }
-
-  const finalMonth = month || getCurrentMonthYear().month;
-  const finalYear = Number(year || getCurrentMonthYear().year);
-
-  const cleanCategory = category.trim();
-
-  if (!cleanCategory) {
-    throw new Error("Budget category name cannot be empty");
-  }
-
-  // ------------------------------------------
-  // FIND MONTHLY BUDGET
-  // ------------------------------------------
-
-  const monthlyBudget = await Budget.findOne({
-    user: userId,
-    month: finalMonth,
-    year: finalYear,
-  });
-
-  if (!monthlyBudget) {
-    throw new Error(
-      `Please set your monthly budget for ${finalMonth} ${finalYear} first`,
-    );
-  }
-
-  // ------------------------------------------
-  // CHECK DUPLICATE CATEGORY
-  // CASE INSENSITIVE
-  // ------------------------------------------
-
-  const escapedCategory = cleanCategory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  const existingCategory = await BudgetCategory.findOne({
-    user: userId,
-    month: finalMonth,
-    year: finalYear,
-    category: {
-      $regex: `^${escapedCategory}$`,
-      $options: "i",
-    },
-  });
-
-  if (existingCategory) {
-    throw new Error(
-      `${existingCategory.category} category already exists for ${finalMonth} ${finalYear}`,
-    );
-  }
-
-  // ------------------------------------------
-  // GET EXISTING CATEGORIES
-  // ------------------------------------------
-
-  const existingCategories = await BudgetCategory.find({
-    user: userId,
-    month: finalMonth,
-    year: finalYear,
-  });
-
-  const totalAllocated = existingCategories.reduce(
-    (total, item) => total + Number(item.amount),
-    0,
-  );
-
-  const remainingBudget = Number(monthlyBudget.amount) - totalAllocated;
-
-  // ------------------------------------------
-  // CHECK AVAILABLE ALLOCATION
-  // ------------------------------------------
-
-  if (numericAmount > remainingBudget) {
-    throw new Error(
-      `You only have ₹${Math.max(0, remainingBudget).toLocaleString(
-        "en-IN",
-      )} left to allocate for ${finalMonth}`,
-    );
-  }
-
-  // ------------------------------------------
-  // CREATE CATEGORY
-  // ------------------------------------------
-
-  const newCategory = await BudgetCategory.create({
-    user: userId,
-    category: cleanCategory,
-    amount: numericAmount,
-    month: finalMonth,
-    year: finalYear,
-  });
-
-  return newCategory;
 };
 
 // ======================================================
@@ -210,10 +58,6 @@ const addBudgetCategory = async ({ userId, category, amount, month, year }) => {
 
 router.post("/", protect, upload.single("audio"), async (req, res) => {
   try {
-    // ==================================================
-    // CHECK AUDIO
-    // ==================================================
-
     if (!req.file) {
       return res.status(400).json({
         message: "Audio file is required.",
@@ -258,10 +102,7 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
 You are a finance command parser.
 
 Return EXACTLY ONE valid JSON object.
-
-NEVER return an array.
-NEVER return markdown.
-NEVER return explanation.
+Never return an array.
 
 Understand:
 - English
@@ -269,26 +110,19 @@ Understand:
 - Hinglish
 - Natural sentence structure
 
-==================================================
-SUPPORTED ACTIONS
-==================================================
-
+Actions:
 - add
 - update
 - delete
 - add_category
+- update_category
+- delete_category
 - query
 
 
-==================================================
-ADD TRANSACTION
-==================================================
-
-Example:
-
-"add 200 food"
-
-Return:
+========================================
+TRANSACTION ADD
+========================================
 
 {
   "action": "add",
@@ -298,38 +132,9 @@ Return:
 }
 
 
-Example:
-
-"salary 50000 add"
-
-Return:
-
-{
-  "action": "add",
-  "amount": 50000,
-  "category": "Salary",
-  "type": "Income"
-}
-
-
-Rules:
-- amount must come from user speech.
-- category must come from user speech.
-- Never invent amount.
-- Never invent category.
-- Expense means spending.
-- Income means money received.
-
-
-==================================================
-UPDATE TRANSACTION
-==================================================
-
-Example:
-
-"update travel 300 to 150"
-
-Return:
+========================================
+TRANSACTION UPDATE
+========================================
 
 {
   "action": "update",
@@ -343,116 +148,52 @@ Return:
   }
 }
 
-
-IMPORTANT:
-OLD values go inside target.
-NEW values go inside changes.
+OLD values → target
+NEW values → changes
 
 
-==================================================
-DELETE TRANSACTION
-==================================================
-
-Example:
-
-"delete travel 300"
-
-Return:
+========================================
+TRANSACTION DELETE
+========================================
 
 {
   "action": "delete",
   "target": {
     "category": "Travel",
     "amount": 300,
-    "type": "Expense"
-  }
-}
-
-
-==================================================
-LATEST DELETE RULE
-==================================================
-
-If user says:
-
-- latest
-- last
-- most recent
-- abhi wala
-- abhi wali
-- last wala
-- last wali
-- sabse recent
-- sabse latest
-
-set:
-
-"latest": true
-
-
-VERY IMPORTANT:
-
-latest means:
-
-FIRST filter by the spoken transaction details.
-
-THEN select the newest transaction from those matching transactions.
-
-It does NOT mean newest transaction overall.
-
-
-Example:
-
-Transactions:
-
-Food ₹200
-Travel ₹200
-Travel ₹200
-Food ₹500
-
-
-User:
-
-"delete latest travel 200"
-
-
-Correct:
-
-{
-  "action": "delete",
-  "target": {
-    "category": "Travel",
-    "amount": 200,
     "type": "Expense",
     "latest": true
   }
 }
 
+If user says latest/last/most recent:
+latest = true
 
-DO NOT select latest Food ₹200.
+Latest means:
+FIRST match category + amount + type,
+THEN select newest matching transaction.
+
+Example:
+
+Food 200
+Travel 200
+Travel 200
+Food 500
+
+"delete latest travel 200"
+
+means newest Travel ₹200.
 
 
-==================================================
-ADD BUDGET CATEGORY
-==================================================
+========================================
+BUDGET CATEGORY ADD
+========================================
 
-This action is ONLY for adding a category to the
-Budget Plan.
-
-Examples:
-
-"add category Food 5000"
+If user says:
 
 "add food category 5000"
-
-"create travel budget 3000"
-
-"travel category ka budget 3000 add karo"
-
-"add 5000 budget for shopping category"
-
-"food ka budget 5000 set karo"
-
+"add travel budget 3000"
+"food ka budget 5000 add karo"
 
 Return:
 
@@ -461,129 +202,89 @@ Return:
   "category": "Food",
   "amount": 5000
 }
-
 
 IMPORTANT:
-
-For add_category:
-
+For budget category commands:
 - category = budget category name
 - amount = category budget amount
-- Do NOT create a transaction.
-- Do NOT use action "add".
-- Do NOT include type.
-- Do NOT invent category.
-- Do NOT invent amount.
+- Never confuse this with transaction add.
 
 
-==================================================
-BUDGET CATEGORY EXAMPLES
-==================================================
+========================================
+BUDGET CATEGORY UPDATE
+========================================
 
-User:
+If user says:
 
-"add category Food 5000"
+"update food category to 6000"
+"food budget 6000 kar do"
+"travel category ka budget 4000 kar do"
 
 Return:
 
 {
-  "action": "add_category",
-  "category": "Food",
-  "amount": 5000
+  "action": "update_category",
+  "target": {
+    "category": "Food"
+  },
+  "changes": {
+    "amount": 6000
+  }
 }
 
+OLD category → target
+NEW amount → changes
 
-User:
 
-"travel category ka budget 3000 add karo"
+========================================
+BUDGET CATEGORY DELETE
+========================================
+
+If user says:
+
+"delete food category"
+"remove food budget category"
+"food category hata do"
 
 Return:
 
 {
-  "action": "add_category",
-  "category": "Travel",
-  "amount": 3000
+  "action": "delete_category",
+  "target": {
+    "category": "Food"
+  }
 }
 
 
-User:
+========================================
+CATEGORY RULES
+========================================
 
-"shopping budget 4000"
-
-Return:
-
-{
-  "action": "add_category",
-  "category": "Shopping",
-  "amount": 4000
-}
-
-
-User:
-
-"add 2500 for medical category"
-
-Return:
-
-{
-  "action": "add_category",
-  "category": "Medical",
-  "amount": 2500
-}
+- Never invent category.
+- Never invent amount.
+- Category can contain multiple words.
+- Keep category exactly as spoken.
+- Budget category commands do NOT need transaction type.
+- Budget category commands do NOT need latest.
 
 
-==================================================
-IMPORTANT DISTINCTION
-==================================================
-
-"add food 500"
-
-means TRANSACTION:
-
-{
-  "action": "add",
-  "amount": 500,
-  "category": "Food",
-  "type": "Expense"
-}
-
-
-"add category food 5000"
-
-means BUDGET CATEGORY:
-
-{
-  "action": "add_category",
-  "category": "Food",
-  "amount": 5000
-}
-
-
-The word "category" or clear budget wording should
-make it add_category.
-
-
-==================================================
+========================================
 QUERY
-==================================================
-
-If user asks general financial information:
+========================================
 
 {
   "action": "query"
 }
 
 
-==================================================
+========================================
 FINAL RULES
-==================================================
+========================================
 
-- Return ONLY valid JSON.
-- Never return an array.
-- Never invent values.
-- Keep category as the category intended by the user.
-- Do not confuse budget category with transaction.
-`,
+Return ONLY valid JSON.
+Never return an array.
+Never add explanations outside JSON.
+          `,
         },
 
         {
@@ -599,32 +300,14 @@ FINAL RULES
       },
     });
 
-    // ==================================================
-    // PARSE AI RESPONSE
-    // ==================================================
-
-    let parsedCommand;
-
-    try {
-      parsedCommand = JSON.parse(completion.choices[0].message.content);
-    } catch (parseError) {
-      console.error("❌ AI JSON parse error:", parseError);
-
-      return res.status(400).json({
-        message: "AI could not understand the command correctly.",
-      });
-    }
-
-    // ==================================================
-    // NORMALIZE COMMAND
-    // ==================================================
+    let parsedCommand = JSON.parse(completion.choices[0].message.content);
 
     parsedCommand = normalizeCommand(parsedCommand, text);
 
     console.log("🤖 AI Parsed Command:", parsedCommand);
 
     // ==================================================
-    // ADD TRANSACTION
+    // TRANSACTION ADD
     // ==================================================
 
     if (parsedCommand.action === "add") {
@@ -645,7 +328,7 @@ FINAL RULES
     }
 
     // ==================================================
-    // UPDATE TRANSACTION
+    // TRANSACTION UPDATE
     // ==================================================
 
     if (parsedCommand.action === "update") {
@@ -664,7 +347,7 @@ FINAL RULES
     }
 
     // ==================================================
-    // DELETE TRANSACTION
+    // TRANSACTION DELETE
     // ==================================================
 
     if (parsedCommand.action === "delete") {
@@ -687,18 +370,215 @@ FINAL RULES
     // ==================================================
 
     if (parsedCommand.action === "add_category") {
-      const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
+      const category = String(parsedCommand.category || "").trim();
+      const amount = Number(parsedCommand.amount);
 
-      const category = await addBudgetCategory({
-        userId: req.user._id,
-        category: parsedCommand.category,
-        amount: parsedCommand.amount,
-        month: currentMonth,
-        year: currentYear,
+      if (!category) {
+        throw new Error("Budget category name is required");
+      }
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Budget category amount must be greater than 0");
+      }
+
+      const now = new Date();
+
+      const month = now.toLocaleString("en-US", {
+        month: "long",
+      });
+
+      const year = now.getFullYear();
+
+      const monthlyBudget = await Budget.findOne({
+        user: req.user._id,
+        month,
+        year,
+      });
+
+      if (!monthlyBudget) {
+        throw new Error("Please set your monthly budget first");
+      }
+
+      const existingCategory = await BudgetCategory.findOne({
+        user: req.user._id,
+        category: {
+          $regex: `^${category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          $options: "i",
+        },
+        month,
+        year,
+      });
+
+      if (existingCategory) {
+        throw new Error("This category already exists in your budget plan");
+      }
+
+      const existingCategories = await BudgetCategory.find({
+        user: req.user._id,
+        month,
+        year,
+      });
+
+      const totalAllocated = existingCategories.reduce(
+        (total, item) => total + Number(item.amount),
+        0,
+      );
+
+      if (totalAllocated + amount > Number(monthlyBudget.amount)) {
+        throw new Error(
+          `You only have ₹${Math.max(
+            0,
+            Number(monthlyBudget.amount) - totalAllocated,
+          ).toLocaleString("en-IN")} left to allocate`,
+        );
+      }
+
+      const newCategory = await BudgetCategory.create({
+        user: req.user._id,
+        category,
+        amount,
+        month,
+        year,
       });
 
       return res.status(201).json({
-        message: `Budget category "${category.category}" added successfully.`,
+        message: "Budget category added successfully.",
+        text,
+        command: parsedCommand,
+        category: newCategory,
+      });
+    }
+
+    // ==================================================
+    // UPDATE BUDGET CATEGORY
+    // ==================================================
+
+    if (parsedCommand.action === "update_category") {
+      const targetCategory = String(
+        parsedCommand.target?.category || "",
+      ).trim();
+
+      const newAmount = Number(parsedCommand.changes?.amount);
+
+      if (!targetCategory) {
+        throw new Error("Budget category is required");
+      }
+
+      if (!Number.isFinite(newAmount) || newAmount <= 0) {
+        throw new Error("New budget amount must be greater than 0");
+      }
+
+      const now = new Date();
+
+      const month = now.toLocaleString("en-US", {
+        month: "long",
+      });
+
+      const year = now.getFullYear();
+
+      const category = await BudgetCategory.findOne({
+        user: req.user._id,
+        category: {
+          $regex: `^${targetCategory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          $options: "i",
+        },
+        month,
+        year,
+      });
+
+      if (!category) {
+        throw new Error(
+          `Budget category "${targetCategory}" not found for ${month} ${year}`,
+        );
+      }
+
+      const monthlyBudget = await Budget.findOne({
+        user: req.user._id,
+        month,
+        year,
+      });
+
+      if (!monthlyBudget) {
+        throw new Error("Monthly budget not found");
+      }
+
+      const otherCategories = await BudgetCategory.find({
+        user: req.user._id,
+        month,
+        year,
+        _id: { $ne: category._id },
+      });
+
+      const otherAllocated = otherCategories.reduce(
+        (total, item) => total + Number(item.amount),
+        0,
+      );
+
+      if (otherAllocated + newAmount > Number(monthlyBudget.amount)) {
+        throw new Error(
+          `You only have ₹${Math.max(
+            0,
+            Number(monthlyBudget.amount) - otherAllocated,
+          ).toLocaleString("en-IN")} available for this category`,
+        );
+      }
+
+      category.amount = newAmount;
+
+      await category.save();
+
+      return res.status(200).json({
+        message: "Budget category updated successfully.",
+        text,
+        command: parsedCommand,
+        category,
+      });
+    }
+
+    // ==================================================
+    // DELETE BUDGET CATEGORY
+    // ==================================================
+
+    if (parsedCommand.action === "delete_category") {
+      const targetCategory = String(
+        parsedCommand.target?.category || "",
+      ).trim();
+
+      if (!targetCategory) {
+        throw new Error("Budget category is required");
+      }
+
+      const now = new Date();
+
+      const month = now.toLocaleString("en-US", {
+        month: "long",
+      });
+
+      const year = now.getFullYear();
+
+      const category = await BudgetCategory.findOne({
+        user: req.user._id,
+        category: {
+          $regex: `^${targetCategory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          $options: "i",
+        },
+        month,
+        year,
+      });
+
+      if (!category) {
+        throw new Error(
+          `Budget category "${targetCategory}" not found for ${month} ${year}`,
+        );
+      }
+
+      await BudgetCategory.deleteOne({
+        _id: category._id,
+        user: req.user._id,
+      });
+
+      return res.status(200).json({
+        message: "Budget category deleted successfully.",
         text,
         command: parsedCommand,
         category,
@@ -717,13 +597,8 @@ FINAL RULES
       });
     }
 
-    // ==================================================
-    // UNKNOWN ACTION
-    // ==================================================
-
     return res.status(400).json({
-      message: "I could not understand this finance command.",
-      text,
+      message: "Unknown voice command.",
       command: parsedCommand,
     });
   } catch (error) {

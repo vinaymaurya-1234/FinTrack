@@ -59,7 +59,11 @@ function Navbar({ isOpen, setIsOpen }) {
     }
 
     // Budget category change
-    if (command === "add_category") {
+    if (
+      command === "add_category" ||
+      command === "update_category" ||
+      command === "delete_category"
+    ) {
       window.dispatchEvent(new CustomEvent("categoryUpdated"));
     }
   };
