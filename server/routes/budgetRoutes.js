@@ -8,7 +8,6 @@ router.post("/", protect, async (req, res) => {
   try {
     const { amount, month, year } = req.body;
 
-    // Basic validation
     if (!amount || !month || !year) {
       return res.status(400).json({
         message: "Amount, month and year are required",
@@ -21,7 +20,6 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    // Current date
     const currentDate = new Date();
 
     const currentMonth = currentDate.toLocaleString("en-US", {
@@ -30,7 +28,6 @@ router.post("/", protect, async (req, res) => {
 
     const currentYear = currentDate.getFullYear();
 
-    // Next month
     const nextDate = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth() + 1,
@@ -43,28 +40,23 @@ router.post("/", protect, async (req, res) => {
 
     const nextYear = nextDate.getFullYear();
 
-    // Check if selected month is current month
     const isCurrentMonth =
       month === currentMonth && Number(year) === currentYear;
 
-    // Check if selected month is next month
     const isNextMonth = month === nextMonth && Number(year) === nextYear;
 
-    // Only current or next month allowed
     if (!isCurrentMonth && !isNextMonth) {
       return res.status(400).json({
         message: "You can only set a budget for the current or next month",
       });
     }
 
-    // Find budget for THIS USER only
     const existingBudget = await Budget.findOne({
       user: req.user._id,
       month,
       year: Number(year),
     });
 
-    // If budget exists → update
     if (existingBudget) {
       existingBudget.amount = Number(amount);
 
@@ -76,7 +68,6 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    // Create new budget for logged-in user
     const newBudget = new Budget({
       user: req.user._id,
       amount: Number(amount),
@@ -98,7 +89,7 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
-// Get budget for logged-in user
+// Get budget
 router.get("/", protect, async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -113,6 +104,45 @@ router.get("/", protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error fetching budget",
+      error: error.message,
+    });
+  }
+});
+
+// Delete budget
+router.delete("/", protect, async (req, res) => {
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({
+        message: "Month and year are required",
+      });
+    }
+
+    const budget = await Budget.findOne({
+      user: req.user._id,
+      month,
+      year: Number(year),
+    });
+
+    if (!budget) {
+      return res.status(404).json({
+        message: `Budget not found for ${month} ${year}`,
+      });
+    }
+
+    await Budget.deleteOne({
+      _id: budget._id,
+      user: req.user._id,
+    });
+
+    res.status(200).json({
+      message: "Budget deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error deleting budget",
       error: error.message,
     });
   }
