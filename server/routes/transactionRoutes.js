@@ -1,14 +1,19 @@
 const express = require("express");
 const Transaction = require("../models/Transaction");
 const protect = require("../middleware/authMiddleware");
+
 const {
   createTransaction,
   updateTransaction,
+  deleteTransaction,
 } = require("../services/TransactionServices");
 
 const router = express.Router();
 
+// ==========================================
 // ADD TRANSACTION
+// ==========================================
+
 router.post("/", protect, async (req, res) => {
   try {
     const { category, type, amount, date } = req.body;
@@ -21,7 +26,7 @@ router.post("/", protect, async (req, res) => {
       date,
     });
 
-    res.status(201).json(transaction);
+    return res.status(201).json(transaction);
   } catch (error) {
     if (
       error.message === "All transaction fields are required" ||
@@ -34,64 +39,84 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error creating transaction",
       error: error.message,
     });
   }
 });
 
+// ==========================================
 // GET USER TRANSACTIONS
+// ==========================================
+
 router.get("/", protect, async (req, res) => {
   try {
     const transactions = await Transaction.find({
       user: req.user._id,
-    }).sort({ date: -1 });
+    }).sort({
+      date: -1,
+    });
 
-    res.status(200).json(transactions);
+    return res.status(200).json(transactions);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error fetching transactions",
       error: error.message,
     });
   }
 });
 
+// ==========================================
 // DELETE TRANSACTION
+// ==========================================
+
 router.delete("/:id", protect, async (req, res) => {
   try {
-    const transaction = await Transaction.findOneAndDelete({
-      _id: req.params.id,
-      user: req.user._id,
+    const transaction = await deleteTransaction({
+      userId: req.user._id,
+      transactionId: req.params.id,
     });
 
-    if (!transaction) {
-      return res.status(404).json({
-        message: "Transaction not found",
+    return res.status(200).json({
+      message: "Transaction deleted successfully.",
+      transaction,
+    });
+  } catch (error) {
+    if (error.message === "Transaction ID is required") {
+      return res.status(400).json({
+        message: error.message,
       });
     }
 
-    res.status(200).json({
-      message: "Transaction deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
+    if (error.message === "Transaction not found") {
+      return res.status(404).json({
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
       message: "Error deleting transaction",
       error: error.message,
     });
   }
 });
 
+// ==========================================
 // UPDATE TRANSACTION
+// ==========================================
+
 router.put("/:id", protect, async (req, res) => {
   try {
     const { category, type, amount, date } = req.body;
 
     const transaction = await updateTransaction({
       userId: req.user._id,
+
       target: {
         id: req.params.id,
       },
+
       changes: {
         category,
         type,
@@ -100,7 +125,7 @@ router.put("/:id", protect, async (req, res) => {
       },
     });
 
-    res.status(200).json(transaction);
+    return res.status(200).json(transaction);
   } catch (error) {
     if (
       error.message === "All transaction fields are required" ||
@@ -119,7 +144,7 @@ router.put("/:id", protect, async (req, res) => {
       });
     }
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error updating transaction",
       error: error.message,
     });

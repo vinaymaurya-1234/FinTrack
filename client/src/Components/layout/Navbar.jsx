@@ -14,6 +14,10 @@ function Navbar({ isOpen, setIsOpen }) {
   const [isListening, setIsListening] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
+  // ==========================================
+  // LOAD PROFILE
+  // ==========================================
+
   useEffect(() => {
     const loadProfile = () => {
       try {
@@ -39,19 +43,42 @@ function Navbar({ isOpen, setIsOpen }) {
     };
   }, []);
 
-  // Send voice command to backend
-  const processVoiceCommand = async (text) => {
+  // ==========================================
+  // DELETE TRANSACTION AFTER CONFIRMATION
+  // ==========================================
+
+  const confirmAndDeleteTransaction = async (transaction) => {
+    if (!transaction?._id) {
+      alert("Transaction information is missing.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login again.");
+      return;
+    }
+
+    const category = transaction.category || "Unknown";
+    const amount = Number(transaction.amount || 0).toLocaleString("en-IN");
+    const type = transaction.type || "Transaction";
+
+    const confirmed = window.confirm(
+      `Delete this transaction?\n\n` +
+        `${category} - ₹${amount}\n` +
+        `${type}\n\n` +
+        `This action cannot be undone.`,
+    );
+
+    if (!confirmed) {
+      alert("Delete cancelled.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Please login again.");
-        return;
-      }
-
-      const { data } = await axios.post(
-        `${API_URL}/api/voice-command`,
-        { command: text },
+      const { data } = await axios.delete(
+        `${API_URL}/api/transactions/${transaction._id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -59,21 +86,116 @@ function Navbar({ isOpen, setIsOpen }) {
         },
       );
 
+      console.log("🗑️ Transaction deleted:", data);
+
+      // Refresh transaction-related UI
       window.dispatchEvent(new CustomEvent("transactionUpdated"));
       window.dispatchEvent(new CustomEvent("categoryUpdated"));
 
-      alert(data.message || "Voice command completed.");
+      alert(data.message || "Transaction deleted successfully.");
     } catch (error) {
-      console.error("Voice command error:", error);
+      console.error("Delete transaction error:", error);
 
       alert(
         error.response?.data?.message ||
-          "Voice command failed. Please try again.",
+          "Failed to delete transaction. Please try again.",
       );
     }
   };
 
-  // Start / Stop microphone
+  // ==========================================
+  // HANDLE VOICE BACKEND RESPONSE
+  // ==========================================
+
+  const handleVoiceResponse = async (data) => {
+    console.log("🎤 Backend response:", data);
+
+    // ------------------------------------------
+    // DELETE CONFIRMATION
+    // ------------------------------------------
+
+    if (data.confirmationRequired) {
+      const deleteResult = data.transaction;
+
+      // ----------------------------------------
+      // MULTIPLE MATCHES
+      // ----------------------------------------
+
+      if (deleteResult?.multipleMatches) {
+        const transactions = deleteResult.transactions || [];
+
+        let message = "Multiple matching transactions found.\n\n";
+
+        transactions.forEach((transaction, index) => {
+          const category = transaction.category || "Unknown";
+          const amount = Number(transaction.amount || 0).toLocaleString(
+            "en-IN",
+          );
+
+          message += `${index + 1}. ${category} - ₹${amount}`;
+
+          if (transaction.type) {
+            message += ` (${transaction.type})`;
+          }
+
+          message += "\n";
+        });
+
+        message +=
+          "\nPlease make the voice command more specific.\n\n" +
+          'Example: "Delete latest Travel 100 rupees"';
+
+        alert(message);
+        return;
+      }
+
+      // ----------------------------------------
+      // SINGLE MATCH
+      // ----------------------------------------
+
+      let transaction = deleteResult;
+
+      // Supports both possible backend formats:
+      //
+      // 1. transaction: actual transaction
+      //
+      // 2. transaction:
+      //    {
+      //      multipleMatches: false,
+      //      transaction: actual transaction
+      //    }
+
+      if (
+        transaction &&
+        transaction.multipleMatches === false &&
+        transaction.transaction
+      ) {
+        transaction = transaction.transaction;
+      }
+
+      if (!transaction?._id) {
+        alert("Transaction could not be identified.");
+        return;
+      }
+
+      await confirmAndDeleteTransaction(transaction);
+      return;
+    }
+
+    // ------------------------------------------
+    // NORMAL RESPONSE
+    // ------------------------------------------
+
+    window.dispatchEvent(new CustomEvent("transactionUpdated"));
+    window.dispatchEvent(new CustomEvent("categoryUpdated"));
+
+    alert(data.message || "Voice command completed.");
+  };
+
+  // ==========================================
+  // START / STOP MICROPHONE
+  // ==========================================
+
   const startVoiceInput = async () => {
     // Stop recording if already listening
     if (isListening && mediaRecorder) {
@@ -107,6 +229,9 @@ function Navbar({ isOpen, setIsOpen }) {
         // Stop microphone completely
         stream.getTracks().forEach((track) => track.stop());
 
+        // Reset recorder state
+        setMediaRecorder(null);
+
         const audioBlob = new Blob(audioChunks, {
           type: "audio/webm",
         });
@@ -135,9 +260,7 @@ function Navbar({ isOpen, setIsOpen }) {
             },
           );
 
-          console.log("🎤 Backend response:", data);
-
-          alert(`Transcription: ${data.text || "No text detected"}`);
+          await handleVoiceResponse(data);
         } catch (error) {
           console.error("Audio upload error:", error);
 
@@ -152,6 +275,7 @@ function Navbar({ isOpen, setIsOpen }) {
         console.error("MediaRecorder error:", event.error);
 
         setIsListening(false);
+        setMediaRecorder(null);
 
         stream.getTracks().forEach((track) => track.stop());
 
@@ -165,6 +289,7 @@ function Navbar({ isOpen, setIsOpen }) {
       console.error("Microphone error:", error);
 
       setIsListening(false);
+      setMediaRecorder(null);
 
       if (error.name === "NotAllowedError") {
         alert("Please allow microphone access.");
@@ -175,6 +300,10 @@ function Navbar({ isOpen, setIsOpen }) {
       }
     }
   };
+
+  // ==========================================
+  // UI
+  // ==========================================
 
   return (
     <header className="navbar">
@@ -193,6 +322,7 @@ function Navbar({ isOpen, setIsOpen }) {
       <div className="navbar-right">
         <div className="search-box">
           <FiSearch className="search-icon" />
+
           <input type="text" placeholder="Search..." />
         </div>
 
@@ -229,3 +359,4 @@ function Navbar({ isOpen, setIsOpen }) {
 }
 
 export default Navbar;
+  
