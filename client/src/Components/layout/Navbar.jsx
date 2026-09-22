@@ -14,6 +14,10 @@ function Navbar({ isOpen, setIsOpen }) {
   const [isListening, setIsListening] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
+  // DELETE CONFIRMATION
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // ======================================================
   // LOAD PROFILE
   // ======================================================
@@ -57,6 +61,77 @@ function Navbar({ isOpen, setIsOpen }) {
     // Budget category change
     if (command === "add_category") {
       window.dispatchEvent(new CustomEvent("categoryUpdated"));
+    }
+  };
+
+  // ======================================================
+  // CONFIRM DELETE TRANSACTION
+  // ======================================================
+
+  const confirmDeleteTransaction = async () => {
+    if (!deleteConfirmation) return;
+
+    /*
+      Backend response structure:
+
+      data.transaction.transaction
+
+      OR
+
+      data.transaction
+    */
+
+    const transaction =
+      deleteConfirmation?.transaction?.transaction ||
+      deleteConfirmation?.transaction;
+
+    const transactionId = transaction?._id;
+
+    if (!transactionId) {
+      console.error("Transaction ID not found:", deleteConfirmation);
+
+      alert("Transaction ID not found.");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Please login again.");
+        return;
+      }
+
+      console.log("🗑️ Deleting transaction:", transactionId);
+
+      const response = await axios.delete(
+        `${API_URL}/api/transactions/${transactionId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      console.log("🗑️ Delete response:", response.data);
+
+      // Close confirmation modal
+      setDeleteConfirmation(null);
+
+      // Refresh all transaction related components
+      refreshAppData("delete");
+
+      alert(response.data.message || "Transaction deleted successfully.");
+    } catch (error) {
+      console.error("❌ Delete transaction error:", error);
+
+      alert(
+        error.response?.data?.message || "Transaction could not be deleted.",
+      );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -121,6 +196,9 @@ function Navbar({ isOpen, setIsOpen }) {
         // Stop microphone tracks
         stream.getTracks().forEach((track) => track.stop());
 
+        // Clear recorder state
+        setMediaRecorder(null);
+
         const audioBlob = new Blob(audioChunks, {
           type: "audio/webm",
         });
@@ -163,21 +241,36 @@ function Navbar({ isOpen, setIsOpen }) {
 
           console.log("🎤 Backend response:", data);
 
-          // ------------------------------------------------
-          // REFRESH CORRECT PART OF APP
-          // ------------------------------------------------
+          // =================================================
+          // DELETE CONFIRMATION
+          // =================================================
+
+          if (
+            data.command?.action === "delete" &&
+            data.confirmationRequired === true
+          ) {
+            console.log("⚠️ Delete confirmation required:", data);
+
+            setDeleteConfirmation(data);
+
+            return;
+          }
+
+          // =================================================
+          // NORMAL COMMANDS
+          // =================================================
 
           if (data.command?.action) {
             refreshAppData(data.command.action);
           }
 
-          // ------------------------------------------------
+          // =================================================
           // SUCCESS MESSAGE
-          // ------------------------------------------------
+          // =================================================
 
           alert(data.message || `Command processed: ${data.text || ""}`);
         } catch (error) {
-          console.error("Audio upload error:", error);
+          console.error("❌ Audio upload error:", error);
 
           alert(
             error.response?.data?.message ||
@@ -194,6 +287,7 @@ function Navbar({ isOpen, setIsOpen }) {
         console.error("MediaRecorder error:", event.error);
 
         setIsListening(false);
+        setMediaRecorder(null);
 
         stream.getTracks().forEach((track) => track.stop());
 
@@ -207,6 +301,7 @@ function Navbar({ isOpen, setIsOpen }) {
       console.error("Microphone error:", error);
 
       setIsListening(false);
+      setMediaRecorder(null);
 
       if (error.name === "NotAllowedError") {
         alert("Please allow microphone access.");
@@ -223,59 +318,116 @@ function Navbar({ isOpen, setIsOpen }) {
   // ======================================================
 
   return (
-    <header className="navbar">
-      <div className="navbar-left">
-        <button
-          className="menu-btn"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          <FaBars />
-        </button>
+    <>
+      <header className="navbar">
+        <div className="navbar-left">
+          <button
+            className="menu-btn"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
+            <FaBars />
+          </button>
 
-        <h2 className="page-title">Dashboard</h2>
-      </div>
-
-      <div className="navbar-right">
-        {/* SEARCH */}
-        <div className="search-box">
-          <FiSearch className="search-icon" />
-
-          <input type="text" placeholder="Search..." />
+          <h2 className="page-title">Dashboard</h2>
         </div>
 
-        {/* VOICE */}
-        <button
-          className={`voice-nav-btn ${isListening ? "listening" : ""}`}
-          onClick={startVoiceInput}
-          aria-label="Voice command"
-          title={isListening ? "Stop listening" : "Voice command"}
-        >
-          <FaMicrophone />
-        </button>
+        <div className="navbar-right">
+          {/* SEARCH */}
 
-        {/* PROFILE */}
-        <button
-          className="profile-box profile-button"
-          onClick={() => navigate("/profile")}
-          aria-label="Open profile"
-        >
-          <div className="navbar-profile-avatar">
-            {profileImage ? (
-              <img src={profileImage} alt="Profile" />
-            ) : (
-              <span>{userName.charAt(0).toUpperCase()}</span>
-            )}
+          <div className="search-box">
+            <FiSearch className="search-icon" />
+
+            <input type="text" placeholder="Search..." />
           </div>
 
-          <div className="profile-info">
-            <h4>{userName}</h4>
+          {/* VOICE */}
 
-            <p>User</p>
+          <button
+            className={`voice-nav-btn ${isListening ? "listening" : ""}`}
+            onClick={startVoiceInput}
+            aria-label="Voice command"
+            title={isListening ? "Stop listening" : "Voice command"}
+          >
+            <FaMicrophone />
+          </button>
+
+          {/* PROFILE */}
+
+          <button
+            className="profile-box profile-button"
+            onClick={() => navigate("/profile")}
+            aria-label="Open profile"
+          >
+            <div className="navbar-profile-avatar">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" />
+              ) : (
+                <span>{userName.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+
+            <div className="profile-info">
+              <h4>{userName}</h4>
+
+              <p>User</p>
+            </div>
+          </button>
+        </div>
+      </header>
+
+      {/* ==================================================
+          DELETE CONFIRMATION MODAL
+      ================================================== */}
+
+      {deleteConfirmation && (
+        <div className="voice-confirm-overlay">
+          <div className="voice-confirm-modal">
+            <h3>Delete Transaction?</h3>
+
+            <p>Are you sure you want to delete this transaction?</p>
+
+            {(() => {
+              const transaction =
+                deleteConfirmation?.transaction?.transaction ||
+                deleteConfirmation?.transaction;
+
+              if (!transaction) {
+                return null;
+              }
+
+              return (
+                <div className="delete-transaction-info">
+                  <strong>{transaction.category}</strong>
+
+                  <span>
+                    ₹{Number(transaction.amount).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              );
+            })()}
+
+            <div className="voice-confirm-buttons">
+              <button
+                className="voice-cancel-btn"
+                onClick={() => setDeleteConfirmation(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="voice-delete-btn"
+                onClick={confirmDeleteTransaction}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
-        </button>
-      </div>
-    </header>
+        </div>
+      )}
+    </>
   );
 }
 
