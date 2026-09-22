@@ -7,6 +7,7 @@ const {
   createTransaction,
   updateTransaction,
   findTransactionForDelete,
+  deleteTransaction,
 } = require("../services/TransactionServices");
 
 const router = express.Router();
@@ -27,7 +28,7 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
       });
     }
 
-    console.log("🎤 Audio received by backend");
+    console.log("🎤 Audio received");
 
     // SPEECH → TEXT
     const transcription = await groq.audio.transcriptions.create({
@@ -37,14 +38,17 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
       model: "whisper-large-v3-turbo",
     });
 
-    const text = transcription.text;
+    const text = transcription.text.trim();
 
     console.log("🗣️ Transcription:", text);
 
     // TEXT → COMMAND
     const completion = await groq.chat.completions.create({
       model: "openai/gpt-oss-20b",
-
+      temperature: 0,
+      response_format: {
+        type: "json_object",
+      },
       messages: [
         {
           role: "system",
@@ -53,11 +57,7 @@ You are a finance command parser.
 
 Return EXACTLY ONE JSON OBJECT.
 
-Understand:
-- English
-- Hindi
-- Hinglish
-- Natural sentence structure
+Understand English, Hindi and Hinglish.
 
 Actions:
 - add
@@ -77,11 +77,11 @@ UPDATE:
 {
   "action": "update",
   "target": {
-    "category": "Travel",
-    "amount": 300
+    "category": "Food",
+    "amount": 200
   },
   "changes": {
-    "amount": 150
+    "amount": 300
   }
 }
 
@@ -89,26 +89,35 @@ DELETE:
 {
   "action": "delete",
   "target": {
-    "category": "Travel",
-    "amount": 300
+    "category": "Food",
+    "amount": 200
   }
 }
 
-DELETE RULES:
-- target identifies the existing transaction.
-- Include category if spoken.
-- Include amount if spoken.
-- Include type if spoken.
-- Never invent values.
-- Category can be any word or phrase.
+DELETE LAST/LATEST:
+If user says "last", "latest", "sabse last", "recent" or similar, add:
+"latest": true
 
-QUERY:
+Example:
+"last Food transaction delete kar"
+
 {
-  "action": "query"
+  "action": "delete",
+  "target": {
+    "category": "Food",
+    "latest": true
+  }
 }
 
-Return ONLY valid JSON.
-Never return an array.
+RULES:
+- Category can be ANY word or phrase.
+- Never invent category, amount or type.
+- For update, old values go in target.
+- New values go in changes.
+- For delete, target identifies the existing transaction.
+- Include type only when spoken.
+- Never return an array.
+- Return ONLY valid JSON.
           `,
         },
         {
@@ -116,17 +125,11 @@ Never return an array.
           content: text,
         },
       ],
-
-      temperature: 0,
-
-      response_format: {
-        type: "json_object",
-      },
     });
 
     const parsedCommand = JSON.parse(completion.choices[0].message.content);
 
-    console.log("🤖 AI Parsed Command:", parsedCommand);
+    console.log("🤖 Parsed command:", parsedCommand);
 
     // ADD
     if (parsedCommand.action === "add") {
@@ -162,12 +165,29 @@ Never return an array.
       });
     }
 
-    // DELETE - FIND ONLY
+    // DELETE
     if (parsedCommand.action === "delete") {
-      const transaction = await findTransactionForDelete({
+      const result = await findTransactionForDelete({
         userId: req.user._id,
         target: parsedCommand.target,
       });
+
+      // Multiple matches
+      if (result.multipleMatches) {
+        return res.status(200).json({
+          message:
+            "Multiple matching transactions found. Please specify which one to delete.",
+          confirmationRequired: true,
+          multipleMatches: true,
+          text,
+          command: parsedCommand,
+          transactions: result.transactions,
+          count: result.count,
+        });
+      }
+
+      // Single/latest transaction
+      const transaction = result.transaction;
 
       return res.status(200).json({
         message: "Delete confirmation required.",
@@ -196,6 +216,27 @@ Never return an array.
 
     return res.status(400).json({
       message: error.message || "Voice command failed.",
+    });
+  }
+});
+
+// ACTUAL DELETE AFTER CONFIRMATION
+router.delete("/:transactionId", protect, async (req, res) => {
+  try {
+    const transaction = await deleteTransaction({
+      userId: req.user._id,
+      transactionId: req.params.transactionId,
+    });
+
+    return res.status(200).json({
+      message: "Transaction deleted successfully.",
+      transaction,
+    });
+  } catch (error) {
+    console.error("❌ Delete error:", error);
+
+    return res.status(400).json({
+      message: error.message || "Transaction delete failed.",
     });
   }
 });

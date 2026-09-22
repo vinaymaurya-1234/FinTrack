@@ -19,16 +19,10 @@ const getAvailableBalance = async (userId, excludeId = null) => {
     .filter((t) => t.type === "Expense")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const balance = income - expenses;
-
   const locked = goals.reduce((sum, goal) => sum + Number(goal.savedAmount), 0);
 
-  return balance - locked;
+  return income - expenses - locked;
 };
-
-// ================================
-// CREATE TRANSACTION
-// ================================
 
 const createTransaction = async ({ userId, category, type, amount, date }) => {
   const transactionAmount = Number(amount);
@@ -58,56 +52,43 @@ const createTransaction = async ({ userId, category, type, amount, date }) => {
     }
   }
 
-  const transaction = await Transaction.create({
+  return await Transaction.create({
     user: userId,
     category: category.trim(),
     type,
     amount: transactionAmount,
     date,
   });
-
-  return transaction;
 };
 
-// ================================
-// UPDATE TRANSACTION
-// ================================
-
-const updateTransaction = async ({ userId, target, changes }) => {
-  if (!target || !changes) {
-    throw new Error("Update target and changes are required");
+const buildTargetQuery = (userId, target) => {
+  if (!target) {
+    throw new Error("Transaction target is required");
   }
 
-  // --------------------------------
-  // Build search query
-  // --------------------------------
+  const query = { user: userId };
 
-  const query = {
-    user: userId,
-  };
-
-  // Category target
   if (target.category) {
+    const category = String(target.category)
+      .trim()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
     query.category = {
-      $regex: `^${String(target.category)
-        .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      $regex: `^${category}$`,
       $options: "i",
     };
   }
 
-  // Amount target
   if (target.amount !== undefined && target.amount !== null) {
-    const targetAmount = Number(target.amount);
+    const amount = Number(target.amount);
 
-    if (!Number.isFinite(targetAmount) || targetAmount <= 0) {
+    if (!Number.isFinite(amount) || amount <= 0) {
       throw new Error("Invalid target amount");
     }
 
-    query.amount = targetAmount;
+    query.amount = amount;
   }
 
-  // Type target
   if (target.type) {
     if (!["Income", "Expense"].includes(target.type)) {
       throw new Error("Invalid target transaction type");
@@ -116,36 +97,38 @@ const updateTransaction = async ({ userId, target, changes }) => {
     query.type = target.type;
   }
 
-  // At least one target field is required
   if (
     !target.category &&
     target.amount === undefined &&
     target.type === undefined
   ) {
-    throw new Error("Please specify which transaction should be updated");
+    throw new Error("Please specify which transaction should be selected");
   }
 
-  // --------------------------------
-  // Find matching transactions
-  // --------------------------------
+  return query;
+};
 
-  const matchingTransactions = await Transaction.find(query);
+const updateTransaction = async ({ userId, target, changes }) => {
+  if (!changes) {
+    throw new Error("Update changes are required");
+  }
 
-  if (matchingTransactions.length === 0) {
+  const query = buildTargetQuery(userId, target);
+
+  const transactions = await Transaction.find(query).sort({
+    date: -1,
+    _id: -1,
+  });
+
+  if (!transactions.length) {
     throw new Error("No matching transaction found");
   }
 
-  if (matchingTransactions.length > 1) {
+  if (transactions.length > 1) {
     throw new Error(
       "Multiple matching transactions found. Please specify the transaction more clearly",
     );
   }
-
-  const transaction = matchingTransactions[0];
-
-  // --------------------------------
-  // Validate changes
-  // --------------------------------
 
   if (
     changes.amount === undefined &&
@@ -155,12 +138,12 @@ const updateTransaction = async ({ userId, target, changes }) => {
     throw new Error("No changes were provided");
   }
 
-  // New values start with existing values
+  const transaction = transactions[0];
+
   let newAmount = Number(transaction.amount);
   let newCategory = transaction.category;
   let newType = transaction.type;
 
-  // Amount change
   if (changes.amount !== undefined) {
     newAmount = Number(changes.amount);
 
@@ -169,16 +152,14 @@ const updateTransaction = async ({ userId, target, changes }) => {
     }
   }
 
-  // Category change
   if (changes.category !== undefined) {
-    if (!String(changes.category).trim()) {
+    newCategory = String(changes.category).trim();
+
+    if (!newCategory) {
       throw new Error("Category cannot be empty");
     }
-
-    newCategory = String(changes.category).trim();
   }
 
-  // Type change
   if (changes.type !== undefined) {
     if (!["Income", "Expense"].includes(changes.type)) {
       throw new Error("Invalid transaction type");
@@ -187,9 +168,6 @@ const updateTransaction = async ({ userId, target, changes }) => {
     newType = changes.type;
   }
 
-
-  // If final transaction is an Expense,
-  // make sure the user has enough available balance.
   if (newType === "Expense") {
     const availableBalance = await getAvailableBalance(userId, transaction._id);
 
@@ -203,8 +181,6 @@ const updateTransaction = async ({ userId, target, changes }) => {
     }
   }
 
-
-
   transaction.amount = newAmount;
   transaction.category = newCategory;
   transaction.type = newType;
@@ -214,87 +190,61 @@ const updateTransaction = async ({ userId, target, changes }) => {
   return transaction;
 };
 
-// ================================
-// FIND TRANSACTION FOR DELETE
-// ================================
-
 const findTransactionForDelete = async ({ userId, target }) => {
-  if (!target) {
-    throw new Error("Delete target is required");
-  }
+  const query = buildTargetQuery(userId, target);
 
-  // --------------------------------
-  // Build search query
-  // --------------------------------
+  const transactions = await Transaction.find(query).sort({
+    date: -1,
+    _id: -1,
+  });
 
-  const query = {
-    user: userId,
-  };
-
-  // Category target
-  if (target.category) {
-    query.category = {
-      $regex: `^${String(target.category)
-        .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-      $options: "i",
-    };
-  }
-
-  // Amount target
-  if (target.amount !== undefined && target.amount !== null) {
-    const targetAmount = Number(target.amount);
-
-    if (!Number.isFinite(targetAmount) || targetAmount <= 0) {
-      throw new Error("Invalid target amount");
-    }
-
-    query.amount = targetAmount;
-  }
-
-  // Type target
-  if (target.type) {
-    if (!["Income", "Expense"].includes(target.type)) {
-      throw new Error("Invalid target transaction type");
-    }
-
-    query.type = target.type;
-  }
-
-  // --------------------------------
-  // Make sure at least one target
-  // field is provided
-  // --------------------------------
-
-  if (
-    !target.category &&
-    target.amount === undefined &&
-    target.type === undefined
-  ) {
-    throw new Error(
-      "Please specify which transaction should be deleted",
-    );
-  }
-
-  // --------------------------------
-  // Find matching transactions
-  // --------------------------------
-
-  const matchingTransactions = await Transaction.find(query);
-
-  if (matchingTransactions.length === 0) {
+  if (!transactions.length) {
     throw new Error("No matching transaction found");
   }
 
-  // Don't delete automatically when
-  // multiple transactions match.
-  if (matchingTransactions.length > 1) {
-    throw new Error(
-      "Multiple matching transactions found. Please specify the transaction more clearly",
-    );
+  // "last/latest" command
+  if (target.latest === true) {
+    return {
+      multipleMatches: false,
+      transaction: transactions[0],
+    };
   }
 
-  return matchingTransactions[0];
+  // Multiple matching transactions
+  if (transactions.length > 1) {
+    return {
+      multipleMatches: true,
+      count: transactions.length,
+      transactions: transactions.slice(0, 5),
+    };
+  }
+
+  return {
+    multipleMatches: false,
+    transaction: transactions[0],
+  };
+};
+
+const deleteTransaction = async ({ userId, transactionId }) => {
+  if (!transactionId) {
+    throw new Error("Transaction ID is required");
+  }
+
+  const transaction = await Transaction.findOne({
+    _id: transactionId,
+    user: userId,
+  });
+
+  if (!transaction) {
+    throw new Error("Transaction not found");
+  }
+
+  await Transaction.deleteOne({
+    _id: transactionId,
+    user: userId,
+  });
+
+  return transaction;
 };
 
 module.exports = {
@@ -302,4 +252,5 @@ module.exports = {
   createTransaction,
   updateTransaction,
   findTransactionForDelete,
+  deleteTransaction,
 };
