@@ -9,6 +9,9 @@ const {
   findTransactionForDelete,
 } = require("../services/TransactionServices");
 
+const BudgetCategory = require("../models/BudgetCategory");
+const Budget = require("../models/Budget");
+
 const router = express.Router();
 
 const upload = multer({
@@ -19,20 +22,41 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ================================
+// ======================================================
+// HELPER: CURRENT MONTH / YEAR
+// ======================================================
+
+const getCurrentMonthYear = () => {
+  const now = new Date();
+
+  const month = now.toLocaleString("en-US", {
+    month: "long",
+  });
+
+  const year = now.getFullYear();
+
+  return {
+    month,
+    year,
+  };
+};
+
+// ======================================================
 // NORMALIZE AI COMMAND
-// ================================
+// ======================================================
 
 const normalizeCommand = (command, text) => {
   if (!command || typeof command !== "object") {
     throw new Error("Invalid AI command");
   }
 
+  // ------------------------------------------
+  // NORMALIZE TARGET
+  // ------------------------------------------
+
   if (command.target && typeof command.target === "object") {
     const target = command.target;
 
-    // Sometimes AI may accidentally include "latest"
-    // inside category.
     if (typeof target.category === "string") {
       target.category = target.category
         .replace(/^(?:the\s+)?(?:latest|last|most\s+recent)\s+/i, "")
@@ -40,24 +64,156 @@ const normalizeCommand = (command, text) => {
         .trim();
     }
 
-    // Detect latest directly from original transcription.
+    // Detect latest from ORIGINAL transcription.
     const latestPattern =
-      /\b(?:latest|last|most\s+recent|abhi\s+(?:wala|wali|waala|waali)|sabse\s+recent|sabse\s+latest)\b/i;
+      /\b(?:latest|last|most\s+recent|abhi\s+(?:wala|wali|waala|waali)|last\s+(?:wala|wali)|sabse\s+(?:recent|latest))\b/i;
 
     if (latestPattern.test(text || "")) {
       target.latest = true;
     }
   }
 
+  // ------------------------------------------
+  // NORMALIZE ADD CATEGORY
+  // ------------------------------------------
+
+  if (command.action === "add_category") {
+    if (typeof command.category === "string") {
+      command.category = command.category
+        .replace(
+          /^(?:add|create|make|set)\s+(?:a\s+)?(?:budget\s+)?category\s+/i,
+          "",
+        )
+        .trim();
+    }
+
+    command.amount = Number(command.amount);
+
+    if (!Number.isFinite(command.amount)) {
+      command.amount = null;
+    }
+  }
+
   return command;
 };
 
-// ================================
+// ======================================================
+// ADD BUDGET CATEGORY
+// ======================================================
+
+const addBudgetCategory = async ({ userId, category, amount, month, year }) => {
+  if (!category || typeof category !== "string") {
+    throw new Error("Budget category name is required");
+  }
+
+  const numericAmount = Number(amount);
+
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new Error("Budget category amount must be greater than 0");
+  }
+
+  const finalMonth = month || getCurrentMonthYear().month;
+  const finalYear = Number(year || getCurrentMonthYear().year);
+
+  const cleanCategory = category.trim();
+
+  if (!cleanCategory) {
+    throw new Error("Budget category name cannot be empty");
+  }
+
+  // ------------------------------------------
+  // FIND MONTHLY BUDGET
+  // ------------------------------------------
+
+  const monthlyBudget = await Budget.findOne({
+    user: userId,
+    month: finalMonth,
+    year: finalYear,
+  });
+
+  if (!monthlyBudget) {
+    throw new Error(
+      `Please set your monthly budget for ${finalMonth} ${finalYear} first`,
+    );
+  }
+
+  // ------------------------------------------
+  // CHECK DUPLICATE CATEGORY
+  // CASE INSENSITIVE
+  // ------------------------------------------
+
+  const escapedCategory = cleanCategory.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const existingCategory = await BudgetCategory.findOne({
+    user: userId,
+    month: finalMonth,
+    year: finalYear,
+    category: {
+      $regex: `^${escapedCategory}$`,
+      $options: "i",
+    },
+  });
+
+  if (existingCategory) {
+    throw new Error(
+      `${existingCategory.category} category already exists for ${finalMonth} ${finalYear}`,
+    );
+  }
+
+  // ------------------------------------------
+  // GET EXISTING CATEGORIES
+  // ------------------------------------------
+
+  const existingCategories = await BudgetCategory.find({
+    user: userId,
+    month: finalMonth,
+    year: finalYear,
+  });
+
+  const totalAllocated = existingCategories.reduce(
+    (total, item) => total + Number(item.amount),
+    0,
+  );
+
+  const remainingBudget = Number(monthlyBudget.amount) - totalAllocated;
+
+  // ------------------------------------------
+  // CHECK AVAILABLE ALLOCATION
+  // ------------------------------------------
+
+  if (numericAmount > remainingBudget) {
+    throw new Error(
+      `You only have ₹${Math.max(0, remainingBudget).toLocaleString(
+        "en-IN",
+      )} left to allocate for ${finalMonth}`,
+    );
+  }
+
+  // ------------------------------------------
+  // CREATE CATEGORY
+  // ------------------------------------------
+
+  const newCategory = await BudgetCategory.create({
+    user: userId,
+    category: cleanCategory,
+    amount: numericAmount,
+    month: finalMonth,
+    year: finalYear,
+  });
+
+  return newCategory;
+};
+
+// ======================================================
 // VOICE COMMAND
-// ================================
+// ======================================================
 
 router.post("/", protect, upload.single("audio"), async (req, res) => {
   try {
+    // ==================================================
+    // CHECK AUDIO
+    // ==================================================
+
     if (!req.file) {
       return res.status(400).json({
         message: "Audio file is required.",
@@ -66,9 +222,9 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
 
     console.log("🎤 Audio received by backend");
 
-    // ================================
+    // ==================================================
     // SPEECH → TEXT
-    // ================================
+    // ==================================================
 
     const transcription = await groq.audio.transcriptions.create({
       file: new File([req.file.buffer], req.file.originalname, {
@@ -87,9 +243,9 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
       });
     }
 
-    // ================================
+    // ==================================================
     // TEXT → COMMAND
-    // ================================
+    // ==================================================
 
     const completion = await groq.chat.completions.create({
       model: "openai/gpt-oss-20b",
@@ -102,7 +258,10 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
 You are a finance command parser.
 
 Return EXACTLY ONE valid JSON object.
-Never return an array.
+
+NEVER return an array.
+NEVER return markdown.
+NEVER return explanation.
 
 Understand:
 - English
@@ -110,16 +269,26 @@ Understand:
 - Hinglish
 - Natural sentence structure
 
-Actions:
+==================================================
+SUPPORTED ACTIONS
+==================================================
+
 - add
 - update
 - delete
+- add_category
 - query
 
 
-========================================
-ADD
-========================================
+==================================================
+ADD TRANSACTION
+==================================================
+
+Example:
+
+"add 200 food"
+
+Return:
 
 {
   "action": "add",
@@ -129,9 +298,38 @@ ADD
 }
 
 
-========================================
-UPDATE
-========================================
+Example:
+
+"salary 50000 add"
+
+Return:
+
+{
+  "action": "add",
+  "amount": 50000,
+  "category": "Salary",
+  "type": "Income"
+}
+
+
+Rules:
+- amount must come from user speech.
+- category must come from user speech.
+- Never invent amount.
+- Never invent category.
+- Expense means spending.
+- Income means money received.
+
+
+==================================================
+UPDATE TRANSACTION
+==================================================
+
+Example:
+
+"update travel 300 to 150"
+
+Return:
 
 {
   "action": "update",
@@ -145,81 +343,37 @@ UPDATE
   }
 }
 
-For update:
-- OLD values go inside target.
-- NEW values go inside changes.
+
+IMPORTANT:
+OLD values go inside target.
+NEW values go inside changes.
 
 
-========================================
-DELETE
-========================================
+==================================================
+DELETE TRANSACTION
+==================================================
+
+Example:
+
+"delete travel 300"
+
+Return:
 
 {
   "action": "delete",
   "target": {
     "category": "Travel",
     "amount": 300,
-    "type": "Expense",
-    "latest": true
+    "type": "Expense"
   }
 }
 
 
-DELETE RULES:
+==================================================
+LATEST DELETE RULE
+==================================================
 
-- target identifies the existing transaction.
-- Include category if spoken.
-- Include amount if spoken.
-- Include type if spoken.
-- Never invent values.
-- Category can be any word or phrase.
-
-IMPORTANT:
-
-If the user says:
-
-"latest travel 200"
-
-return:
-
-{
-  "action": "delete",
-  "target": {
-    "category": "Travel",
-    "amount": 200,
-    "latest": true
-  }
-}
-
-DO NOT make "latest travel" the category.
-
-If the user says:
-
-"delete latest food 200"
-
-return:
-
-{
-  "action": "delete",
-  "target": {
-    "category": "Food",
-    "amount": 200,
-    "latest": true
-  }
-}
-
-If the user says:
-
-"delete travel 200"
-
-DO NOT set latest to true.
-
-
-========================================
-LATEST WORDS
-========================================
-
-Set latest=true only when the user means:
+If user says:
 
 - latest
 - last
@@ -231,51 +385,205 @@ Set latest=true only when the user means:
 - sabse recent
 - sabse latest
 
-When latest is requested:
+set:
 
-IMPORTANT:
-First identify the category/amount/type.
-Then latest means the newest transaction AMONG THOSE MATCHING VALUES.
+"latest": true
+
+
+VERY IMPORTANT:
+
+latest means:
+
+FIRST filter by the spoken transaction details.
+
+THEN select the newest transaction from those matching transactions.
+
+It does NOT mean newest transaction overall.
+
 
 Example:
 
-If transactions are:
+Transactions:
 
 Food ₹200
 Travel ₹200
 Travel ₹200
 Food ₹500
 
+
+User:
+
 "delete latest travel 200"
 
-means:
 
-Find Travel + ₹200
-THEN select the newest Travel + ₹200.
+Correct:
 
-It does NOT mean select the newest transaction overall.
+{
+  "action": "delete",
+  "target": {
+    "category": "Travel",
+    "amount": 200,
+    "type": "Expense",
+    "latest": true
+  }
+}
 
 
-========================================
+DO NOT select latest Food ₹200.
+
+
+==================================================
+ADD BUDGET CATEGORY
+==================================================
+
+This action is ONLY for adding a category to the
+Budget Plan.
+
+Examples:
+
+"add category Food 5000"
+
+"add food category 5000"
+
+"create travel budget 3000"
+
+"travel category ka budget 3000 add karo"
+
+"add 5000 budget for shopping category"
+
+"food ka budget 5000 set karo"
+
+
+Return:
+
+{
+  "action": "add_category",
+  "category": "Food",
+  "amount": 5000
+}
+
+
+IMPORTANT:
+
+For add_category:
+
+- category = budget category name
+- amount = category budget amount
+- Do NOT create a transaction.
+- Do NOT use action "add".
+- Do NOT include type.
+- Do NOT invent category.
+- Do NOT invent amount.
+
+
+==================================================
+BUDGET CATEGORY EXAMPLES
+==================================================
+
+User:
+
+"add category Food 5000"
+
+Return:
+
+{
+  "action": "add_category",
+  "category": "Food",
+  "amount": 5000
+}
+
+
+User:
+
+"travel category ka budget 3000 add karo"
+
+Return:
+
+{
+  "action": "add_category",
+  "category": "Travel",
+  "amount": 3000
+}
+
+
+User:
+
+"shopping budget 4000"
+
+Return:
+
+{
+  "action": "add_category",
+  "category": "Shopping",
+  "amount": 4000
+}
+
+
+User:
+
+"add 2500 for medical category"
+
+Return:
+
+{
+  "action": "add_category",
+  "category": "Medical",
+  "amount": 2500
+}
+
+
+==================================================
+IMPORTANT DISTINCTION
+==================================================
+
+"add food 500"
+
+means TRANSACTION:
+
+{
+  "action": "add",
+  "amount": 500,
+  "category": "Food",
+  "type": "Expense"
+}
+
+
+"add category food 5000"
+
+means BUDGET CATEGORY:
+
+{
+  "action": "add_category",
+  "category": "Food",
+  "amount": 5000
+}
+
+
+The word "category" or clear budget wording should
+make it add_category.
+
+
+==================================================
 QUERY
-========================================
+==================================================
+
+If user asks general financial information:
 
 {
   "action": "query"
 }
 
 
-========================================
+==================================================
 FINAL RULES
-========================================
+==================================================
 
 - Return ONLY valid JSON.
 - Never return an array.
-- Never invent category.
-- Never invent amount.
-- Never invent type.
-- Keep category exactly as spoken.
-          `,
+- Never invent values.
+- Keep category as the category intended by the user.
+- Do not confuse budget category with transaction.
+`,
         },
 
         {
@@ -291,16 +599,33 @@ FINAL RULES
       },
     });
 
-    let parsedCommand = JSON.parse(completion.choices[0].message.content);
+    // ==================================================
+    // PARSE AI RESPONSE
+    // ==================================================
 
-    // Extra safety normalization
+    let parsedCommand;
+
+    try {
+      parsedCommand = JSON.parse(completion.choices[0].message.content);
+    } catch (parseError) {
+      console.error("❌ AI JSON parse error:", parseError);
+
+      return res.status(400).json({
+        message: "AI could not understand the command correctly.",
+      });
+    }
+
+    // ==================================================
+    // NORMALIZE COMMAND
+    // ==================================================
+
     parsedCommand = normalizeCommand(parsedCommand, text);
 
     console.log("🤖 AI Parsed Command:", parsedCommand);
 
-    // ================================
-    // ADD
-    // ================================
+    // ==================================================
+    // ADD TRANSACTION
+    // ==================================================
 
     if (parsedCommand.action === "add") {
       const transaction = await createTransaction({
@@ -319,9 +644,9 @@ FINAL RULES
       });
     }
 
-    // ================================
-    // UPDATE
-    // ================================
+    // ==================================================
+    // UPDATE TRANSACTION
+    // ==================================================
 
     if (parsedCommand.action === "update") {
       const transaction = await updateTransaction({
@@ -338,9 +663,9 @@ FINAL RULES
       });
     }
 
-    // ================================
-    // DELETE
-    // ================================
+    // ==================================================
+    // DELETE TRANSACTION
+    // ==================================================
 
     if (parsedCommand.action === "delete") {
       const result = await findTransactionForDelete({
@@ -357,9 +682,32 @@ FINAL RULES
       });
     }
 
-    // ================================
+    // ==================================================
+    // ADD BUDGET CATEGORY
+    // ==================================================
+
+    if (parsedCommand.action === "add_category") {
+      const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
+
+      const category = await addBudgetCategory({
+        userId: req.user._id,
+        category: parsedCommand.category,
+        amount: parsedCommand.amount,
+        month: currentMonth,
+        year: currentYear,
+      });
+
+      return res.status(201).json({
+        message: `Budget category "${category.category}" added successfully.`,
+        text,
+        command: parsedCommand,
+        category,
+      });
+    }
+
+    // ==================================================
     // QUERY
-    // ================================
+    // ==================================================
 
     if (parsedCommand.action === "query") {
       return res.status(200).json({
@@ -369,8 +717,13 @@ FINAL RULES
       });
     }
 
+    // ==================================================
+    // UNKNOWN ACTION
+    // ==================================================
+
     return res.status(400).json({
-      message: "Unknown voice command.",
+      message: "I could not understand this finance command.",
+      text,
       command: parsedCommand,
     });
   } catch (error) {

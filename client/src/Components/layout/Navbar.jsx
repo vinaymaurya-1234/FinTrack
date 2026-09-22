@@ -14,9 +14,9 @@ function Navbar({ isOpen, setIsOpen }) {
   const [isListening, setIsListening] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
 
-  // ==========================================
+  // ======================================================
   // LOAD PROFILE
-  // ==========================================
+  // ======================================================
 
   useEffect(() => {
     const loadProfile = () => {
@@ -27,6 +27,7 @@ function Navbar({ isOpen, setIsOpen }) {
           const user = JSON.parse(storedUser);
 
           setUserName(user.name || user.username || "");
+
           setProfileImage(user.profileImage || null);
         }
       } catch (error) {
@@ -43,174 +44,56 @@ function Navbar({ isOpen, setIsOpen }) {
     };
   }, []);
 
-  // ==========================================
-  // DELETE TRANSACTION AFTER CONFIRMATION
-  // ==========================================
+  // ======================================================
+  // DISPATCH APP UPDATE EVENTS
+  // ======================================================
 
-  const confirmAndDeleteTransaction = async (transaction) => {
-    if (!transaction?._id) {
-      alert("Transaction information is missing.");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Please login again.");
-      return;
-    }
-
-    const category = transaction.category || "Unknown";
-    const amount = Number(transaction.amount || 0).toLocaleString("en-IN");
-    const type = transaction.type || "Transaction";
-
-    const confirmed = window.confirm(
-      `Delete this transaction?\n\n` +
-        `${category} - ₹${amount}\n` +
-        `${type}\n\n` +
-        `This action cannot be undone.`,
-    );
-
-    if (!confirmed) {
-      alert("Delete cancelled.");
-      return;
-    }
-
-    try {
-      const { data } = await axios.delete(
-        `${API_URL}/api/transactions/${transaction._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      console.log("🗑️ Transaction deleted:", data);
-
-      // Refresh transaction-related UI
+  const refreshAppData = (command) => {
+    // Transaction related changes
+    if (command === "add" || command === "update" || command === "delete") {
       window.dispatchEvent(new CustomEvent("transactionUpdated"));
+    }
+
+    // Budget category change
+    if (command === "add_category") {
       window.dispatchEvent(new CustomEvent("categoryUpdated"));
-
-      alert(data.message || "Transaction deleted successfully.");
-    } catch (error) {
-      console.error("Delete transaction error:", error);
-
-      alert(
-        error.response?.data?.message ||
-          "Failed to delete transaction. Please try again.",
-      );
     }
   };
 
-  // ==========================================
-  // HANDLE VOICE BACKEND RESPONSE
-  // ==========================================
-
-  const handleVoiceResponse = async (data) => {
-    console.log("🎤 Backend response:", data);
-
-    // ------------------------------------------
-    // DELETE CONFIRMATION
-    // ------------------------------------------
-
-    if (data.confirmationRequired) {
-      const deleteResult = data.transaction;
-
-      // ----------------------------------------
-      // MULTIPLE MATCHES
-      // ----------------------------------------
-
-      if (deleteResult?.multipleMatches) {
-        const transactions = deleteResult.transactions || [];
-
-        let message = "Multiple matching transactions found.\n\n";
-
-        transactions.forEach((transaction, index) => {
-          const category = transaction.category || "Unknown";
-          const amount = Number(transaction.amount || 0).toLocaleString(
-            "en-IN",
-          );
-
-          message += `${index + 1}. ${category} - ₹${amount}`;
-
-          if (transaction.type) {
-            message += ` (${transaction.type})`;
-          }
-
-          message += "\n";
-        });
-
-        message +=
-          "\nPlease make the voice command more specific.\n\n" +
-          'Example: "Delete latest Travel 100 rupees"';
-
-        alert(message);
-        return;
-      }
-
-      // ----------------------------------------
-      // SINGLE MATCH
-      // ----------------------------------------
-
-      let transaction = deleteResult;
-
-      // Supports both possible backend formats:
-      //
-      // 1. transaction: actual transaction
-      //
-      // 2. transaction:
-      //    {
-      //      multipleMatches: false,
-      //      transaction: actual transaction
-      //    }
-
-      if (
-        transaction &&
-        transaction.multipleMatches === false &&
-        transaction.transaction
-      ) {
-        transaction = transaction.transaction;
-      }
-
-      if (!transaction?._id) {
-        alert("Transaction could not be identified.");
-        return;
-      }
-
-      await confirmAndDeleteTransaction(transaction);
-      return;
-    }
-
-    // ------------------------------------------
-    // NORMAL RESPONSE
-    // ------------------------------------------
-
-    window.dispatchEvent(new CustomEvent("transactionUpdated"));
-    window.dispatchEvent(new CustomEvent("categoryUpdated"));
-
-    alert(data.message || "Voice command completed.");
-  };
-
-  // ==========================================
+  // ======================================================
   // START / STOP MICROPHONE
-  // ==========================================
+  // ======================================================
 
   const startVoiceInput = async () => {
-    // Stop recording if already listening
+    // ----------------------------------------------------
+    // STOP RECORDING
+    // ----------------------------------------------------
+
     if (isListening && mediaRecorder) {
       mediaRecorder.stop();
       return;
     }
 
     try {
-      // Request microphone access
+      // --------------------------------------------------
+      // MICROPHONE ACCESS
+      // --------------------------------------------------
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
 
+      // --------------------------------------------------
+      // CREATE RECORDER
+      // --------------------------------------------------
+
       const recorder = new MediaRecorder(stream);
+
       const audioChunks = [];
+
+      // --------------------------------------------------
+      // COLLECT AUDIO
+      // --------------------------------------------------
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -218,25 +101,35 @@ function Navbar({ isOpen, setIsOpen }) {
         }
       };
 
+      // --------------------------------------------------
+      // START
+      // --------------------------------------------------
+
       recorder.onstart = () => {
         setIsListening(true);
+
         console.log("🎤 Listening...");
       };
+
+      // --------------------------------------------------
+      // STOP
+      // --------------------------------------------------
 
       recorder.onstop = async () => {
         setIsListening(false);
 
-        // Stop microphone completely
+        // Stop microphone tracks
         stream.getTracks().forEach((track) => track.stop());
-
-        // Reset recorder state
-        setMediaRecorder(null);
 
         const audioBlob = new Blob(audioChunks, {
           type: "audio/webm",
         });
 
         console.log("🎤 Audio captured:", audioBlob);
+
+        // ------------------------------------------------
+        // TOKEN
+        // ------------------------------------------------
 
         const token = localStorage.getItem("token");
 
@@ -245,9 +138,17 @@ function Navbar({ isOpen, setIsOpen }) {
           return;
         }
 
+        // ------------------------------------------------
+        // FORM DATA
+        // ------------------------------------------------
+
         const formData = new FormData();
 
         formData.append("audio", audioBlob, "voice-command.webm");
+
+        // ------------------------------------------------
+        // SEND TO BACKEND
+        // ------------------------------------------------
 
         try {
           const { data } = await axios.post(
@@ -260,22 +161,39 @@ function Navbar({ isOpen, setIsOpen }) {
             },
           );
 
-          await handleVoiceResponse(data);
+          console.log("🎤 Backend response:", data);
+
+          // ------------------------------------------------
+          // REFRESH CORRECT PART OF APP
+          // ------------------------------------------------
+
+          if (data.command?.action) {
+            refreshAppData(data.command.action);
+          }
+
+          // ------------------------------------------------
+          // SUCCESS MESSAGE
+          // ------------------------------------------------
+
+          alert(data.message || `Command processed: ${data.text || ""}`);
         } catch (error) {
           console.error("Audio upload error:", error);
 
           alert(
             error.response?.data?.message ||
-              "Audio upload failed. Please try again.",
+              "Voice command failed. Please try again.",
           );
         }
       };
+
+      // --------------------------------------------------
+      // RECORDER ERROR
+      // --------------------------------------------------
 
       recorder.onerror = (event) => {
         console.error("MediaRecorder error:", event.error);
 
         setIsListening(false);
-        setMediaRecorder(null);
 
         stream.getTracks().forEach((track) => track.stop());
 
@@ -289,7 +207,6 @@ function Navbar({ isOpen, setIsOpen }) {
       console.error("Microphone error:", error);
 
       setIsListening(false);
-      setMediaRecorder(null);
 
       if (error.name === "NotAllowedError") {
         alert("Please allow microphone access.");
@@ -301,9 +218,9 @@ function Navbar({ isOpen, setIsOpen }) {
     }
   };
 
-  // ==========================================
+  // ======================================================
   // UI
-  // ==========================================
+  // ======================================================
 
   return (
     <header className="navbar">
@@ -320,12 +237,14 @@ function Navbar({ isOpen, setIsOpen }) {
       </div>
 
       <div className="navbar-right">
+        {/* SEARCH */}
         <div className="search-box">
           <FiSearch className="search-icon" />
 
           <input type="text" placeholder="Search..." />
         </div>
 
+        {/* VOICE */}
         <button
           className={`voice-nav-btn ${isListening ? "listening" : ""}`}
           onClick={startVoiceInput}
@@ -335,6 +254,7 @@ function Navbar({ isOpen, setIsOpen }) {
           <FaMicrophone />
         </button>
 
+        {/* PROFILE */}
         <button
           className="profile-box profile-button"
           onClick={() => navigate("/profile")}
@@ -350,6 +270,7 @@ function Navbar({ isOpen, setIsOpen }) {
 
           <div className="profile-info">
             <h4>{userName}</h4>
+
             <p>User</p>
           </div>
         </button>
@@ -359,4 +280,3 @@ function Navbar({ isOpen, setIsOpen }) {
 }
 
 export default Navbar;
-  

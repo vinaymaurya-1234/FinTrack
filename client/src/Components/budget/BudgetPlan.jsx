@@ -5,13 +5,21 @@ import { API_URL } from "../../api";
 
 function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budgetCategories, setBudgetCategories] = useState([]);
+
   const [transactions, setTransactions] = useState([]);
+
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+
   const [showManageCategories, setShowManageCategories] = useState(false);
+
   const [categoryName, setCategoryName] = useState("");
+
   const [categoryAmount, setCategoryAmount] = useState("");
 
-  // Fetch selected month data
+  // ======================================================
+  // FETCH DATA
+  // ======================================================
+
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -24,25 +32,39 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
 
       const [categoryResponse, transactionResponse] = await Promise.all([
         fetch(
-          `${API_URL}/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
-          { headers },
+          `${API_URL}/api/budget-categories?month=${encodeURIComponent(
+            selectedMonth,
+          )}&year=${selectedYear}`,
+          {
+            headers,
+          },
         ),
+
         fetch(`${API_URL}/api/transactions`, {
           headers,
         }),
       ]);
 
+      // ------------------------------------------
+      // CATEGORY DATA
+      // ------------------------------------------
+
       const categoryData = await categoryResponse.json();
-      const transactionData = await transactionResponse.json();
 
       if (categoryResponse.ok) {
-        setBudgetCategories(categoryData);
+        setBudgetCategories(Array.isArray(categoryData) ? categoryData : []);
       } else {
         setBudgetCategories([]);
       }
 
+      // ------------------------------------------
+      // TRANSACTION DATA
+      // ------------------------------------------
+
+      const transactionData = await transactionResponse.json();
+
       if (transactionResponse.ok) {
-        setTransactions(transactionData);
+        setTransactions(Array.isArray(transactionData) ? transactionData : []);
       } else {
         setTransactions([]);
       }
@@ -54,54 +76,110 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
     }
   };
 
-  // Selected month/year change hone par data fetch hoga
+  // ======================================================
+  // NORMAL FETCH
+  // ======================================================
+
   useEffect(() => {
     fetchData();
   }, [selectedMonth, selectedYear]);
 
-  // IMPORTANT:
-  // Parent se aaye selected month/year ke according transactions filter karo
+  // ======================================================
+  // VOICE CATEGORY UPDATE
+  // ======================================================
+
+  useEffect(() => {
+    const handleCategoryUpdated = () => {
+      console.log("🔄 Budget category updated - refreshing...");
+
+      fetchData();
+    };
+
+    window.addEventListener("categoryUpdated", handleCategoryUpdated);
+
+    return () => {
+      window.removeEventListener("categoryUpdated", handleCategoryUpdated);
+    };
+  }, [selectedMonth, selectedYear]);
+
+  // ======================================================
+  // FILTER TRANSACTIONS BY SELECTED MONTH
+  // ======================================================
+
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
 
     return (
       transactionDate.getMonth() === selectedMonthIndex &&
-      transactionDate.getFullYear() === selectedYear
+      transactionDate.getFullYear() === Number(selectedYear)
     );
   });
+
+  // ======================================================
+  // CATEGORY SPENT
+  // ======================================================
 
   const getCategorySpent = (category) => {
     return selectedMonthTransactions
       .filter(
         (transaction) =>
           transaction.type === "Expense" &&
-          transaction.category.toLowerCase() === category.toLowerCase(),
+          String(transaction.category).toLowerCase() ===
+            String(category).toLowerCase(),
       )
       .reduce((total, transaction) => total + Number(transaction.amount), 0);
   };
 
+  // ======================================================
+  // CATEGORY ICON
+  // ======================================================
+
   const getCategoryIcon = (category) => {
-    const name = category.toLowerCase();
+    const name = String(category).toLowerCase();
 
     if (name.includes("food")) return "🍔";
+
     if (name.includes("grocery")) return "🛒";
+
     if (name.includes("rent")) return "🏠";
+
     if (name.includes("travel")) return "✈️";
+
     if (name.includes("transport")) return "🚕";
+
     if (name.includes("medical") || name.includes("medicine")) return "💊";
+
     if (name.includes("bill") || name.includes("utility")) return "💡";
+
     if (name.includes("shopping")) return "🛍️";
+
     if (name.includes("fitness") || name.includes("gym")) return "🏋️";
+
     if (name.includes("entertainment")) return "🎬";
+
     if (name.includes("education")) return "📚";
+
     if (name.includes("other")) return "📦";
 
     return "📌";
   };
 
+  // ======================================================
+  // ADD CATEGORY MANUALLY
+  // ======================================================
+
   const addBudgetCategory = async () => {
-    if (!categoryName || !categoryAmount) {
+    const cleanCategory = categoryName.trim();
+
+    const numericAmount = Number(categoryAmount);
+
+    if (!cleanCategory || !categoryAmount) {
       alert("Please enter category name and amount");
+      return;
+    }
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      alert("Category budget must be greater than 0");
       return;
     }
 
@@ -118,17 +196,18 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
 
         headers: {
           "Content-Type": "application/json",
+
           Authorization: `Bearer ${token}`,
         },
 
         body: JSON.stringify({
-          category: categoryName,
-          amount: Number(categoryAmount),
+          category: cleanCategory,
 
-          // IMPORTANT:
-          // Selected month/year me category save hogi
+          amount: numericAmount,
+
           month: selectedMonth,
-          year: selectedYear,
+
+          year: Number(selectedYear),
         }),
       });
 
@@ -136,23 +215,33 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
 
       if (response.ok) {
         setShowCategoryModal(false);
+
         setCategoryName("");
         setCategoryAmount("");
 
-        fetchData();
+        await fetchData();
       } else {
-        alert(data.message);
+        alert(data.message || "Unable to add category");
       }
     } catch (error) {
       console.error("Error adding category:", error);
+
+      alert("Something went wrong while adding category.");
     }
   };
+
+  // ======================================================
+  // DELETE CATEGORY
+  // ======================================================
 
   const handleDeleteCategory = async (categoryId) => {
     try {
       const token = localStorage.getItem("token");
 
-      if (!token) return;
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
 
       const response = await fetch(
         `${API_URL}/api/budget-categories/${categoryId}`,
@@ -165,17 +254,29 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
         },
       );
 
+      const data = await response.json();
+
       if (response.ok) {
-        fetchData();
+        await fetchData();
+      } else {
+        alert(data.message || "Unable to delete category");
       }
     } catch (error) {
       console.error("Error deleting category:", error);
+
+      alert("Something went wrong while deleting category.");
     }
   };
+
+  // ======================================================
+  // RENDER
+  // ======================================================
 
   return (
     <>
       <div className="budget-plan">
+        {/* HEADER */}
+
         <div className="section-header">
           <h3>Your Budget Plan</h3>
 
@@ -184,13 +285,20 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
           </button>
         </div>
 
+        {/* TABLE */}
+
         <div className="budget-table">
           <div className="budget-table-header">
             <span>Category</span>
+
             <span>Budget</span>
+
             <span>Spent</span>
+
             <span>Remaining</span>
+
             <span>Progress</span>
+
             <span></span>
           </div>
 
@@ -229,6 +337,8 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
           )}
         </div>
 
+        {/* ADD CATEGORY BUTTON */}
+
         <button
           className="add-category-btn"
           onClick={() => setShowCategoryModal(true)}
@@ -237,7 +347,9 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
         </button>
       </div>
 
-      {/* ADD CATEGORY MODAL */}
+      {/* ==================================================
+          ADD CATEGORY MODAL
+      ================================================== */}
 
       {showCategoryModal && (
         <div className="budget-modal-overlay">
@@ -267,7 +379,9 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
                 className="cancel-btn"
                 onClick={() => {
                   setShowCategoryModal(false);
+
                   setCategoryName("");
+
                   setCategoryAmount("");
                 }}
               >
@@ -282,7 +396,9 @@ function BudgetPlan({ selectedMonth, selectedYear, selectedMonthIndex }) {
         </div>
       )}
 
-      {/* MANAGE CATEGORY MODAL */}
+      {/* ==================================================
+          MANAGE CATEGORY MODAL
+      ================================================== */}
 
       {showManageCategories && (
         <div className="modal-overlay">
