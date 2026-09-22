@@ -1,5 +1,5 @@
 import "./Budget.css";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../api";
 import BudgetOverview from "../Components/budget/BudgetOverview";
@@ -17,7 +17,6 @@ function Budget() {
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
-
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   const [selectedMonthIndex, setSelectedMonthIndex] =
@@ -75,19 +74,6 @@ function Budget() {
     "December",
   ];
 
-  // Voice budget change ke baad page refresh
-  useEffect(() => {
-    const handleBudgetUpdate = () => {
-      window.dispatchEvent(new CustomEvent("budgetUpdated"));
-    };
-
-    window.addEventListener("budgetUpdated", handleBudgetUpdate);
-
-    return () => {
-      window.removeEventListener("budgetUpdated", handleBudgetUpdate);
-    };
-  }, []);
-
   const saveBudget = async () => {
     if (!amount || !selectedPeriod) {
       alert("Please enter amount and select a budget period");
@@ -122,7 +108,7 @@ function Budget() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Budget added successfully!");
+        alert(data.message || "Budget saved successfully!");
 
         window.dispatchEvent(new CustomEvent("budgetUpdated"));
 
@@ -309,3 +295,4 @@ function Budget() {
 }
 
 export default Budget;
+s
