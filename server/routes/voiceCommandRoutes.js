@@ -19,9 +19,42 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ==========================================
+// ================================
+// NORMALIZE AI COMMAND
+// ================================
+
+const normalizeCommand = (command, text) => {
+  if (!command || typeof command !== "object") {
+    throw new Error("Invalid AI command");
+  }
+
+  if (command.target && typeof command.target === "object") {
+    const target = command.target;
+
+    // Sometimes AI may accidentally include "latest"
+    // inside category.
+    if (typeof target.category === "string") {
+      target.category = target.category
+        .replace(/^(?:the\s+)?(?:latest|last|most\s+recent)\s+/i, "")
+        .replace(/\s+(?:latest|last|most\s+recent)$/i, "")
+        .trim();
+    }
+
+    // Detect latest directly from original transcription.
+    const latestPattern =
+      /\b(?:latest|last|most\s+recent|abhi\s+(?:wala|wali|waala|waali)|sabse\s+recent|sabse\s+latest)\b/i;
+
+    if (latestPattern.test(text || "")) {
+      target.latest = true;
+    }
+  }
+
+  return command;
+};
+
+// ================================
 // VOICE COMMAND
-// ==========================================
+// ================================
 
 router.post("/", protect, upload.single("audio"), async (req, res) => {
   try {
@@ -33,9 +66,9 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
 
     console.log("🎤 Audio received by backend");
 
-    // ==========================================
+    // ================================
     // SPEECH → TEXT
-    // ==========================================
+    // ================================
 
     const transcription = await groq.audio.transcriptions.create({
       file: new File([req.file.buffer], req.file.originalname, {
@@ -44,13 +77,19 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
       model: "whisper-large-v3-turbo",
     });
 
-    const text = transcription.text;
+    const text = String(transcription.text || "").trim();
 
     console.log("🗣️ Transcription:", text);
 
-    // ==========================================
+    if (!text) {
+      return res.status(400).json({
+        message: "Could not understand the voice command.",
+      });
+    }
+
+    // ================================
     // TEXT → COMMAND
-    // ==========================================
+    // ================================
 
     const completion = await groq.chat.completions.create({
       model: "openai/gpt-oss-20b",
@@ -62,7 +101,8 @@ router.post("/", protect, upload.single("audio"), async (req, res) => {
           content: `
 You are a finance command parser.
 
-Return EXACTLY ONE JSON OBJECT.
+Return EXACTLY ONE valid JSON object.
+Never return an array.
 
 Understand:
 - English
@@ -76,9 +116,10 @@ Actions:
 - delete
 - query
 
-==========================================
+
+========================================
 ADD
-==========================================
+========================================
 
 {
   "action": "add",
@@ -87,9 +128,10 @@ ADD
   "type": "Expense"
 }
 
-==========================================
+
+========================================
 UPDATE
-==========================================
+========================================
 
 {
   "action": "update",
@@ -103,9 +145,14 @@ UPDATE
   }
 }
 
-==========================================
+For update:
+- OLD values go inside target.
+- NEW values go inside changes.
+
+
+========================================
 DELETE
-==========================================
+========================================
 
 {
   "action": "delete",
@@ -117,6 +164,7 @@ DELETE
   }
 }
 
+
 DELETE RULES:
 
 - target identifies the existing transaction.
@@ -126,57 +174,108 @@ DELETE RULES:
 - Never invent values.
 - Category can be any word or phrase.
 
-LATEST RULE:
+IMPORTANT:
 
 If the user says:
-- latest
-- last
-- most recent
-- abhi wala
-- last wala
-- sabse recent
 
-set:
+"latest travel 200"
 
-"latest": true
-
-Otherwise:
-
-"latest": false
-
-or omit it.
-
-Examples:
-
-"Delete latest travel 100 rupees"
-
-should become:
+return:
 
 {
   "action": "delete",
   "target": {
     "category": "Travel",
-    "amount": 100,
+    "amount": 200,
     "latest": true
   }
 }
 
-"Delete travel 100 rupees"
+DO NOT make "latest travel" the category.
 
-should NOT automatically set latest true.
+If the user says:
 
-==========================================
+"delete latest food 200"
+
+return:
+
+{
+  "action": "delete",
+  "target": {
+    "category": "Food",
+    "amount": 200,
+    "latest": true
+  }
+}
+
+If the user says:
+
+"delete travel 200"
+
+DO NOT set latest to true.
+
+
+========================================
+LATEST WORDS
+========================================
+
+Set latest=true only when the user means:
+
+- latest
+- last
+- most recent
+- abhi wala
+- abhi wali
+- last wala
+- last wali
+- sabse recent
+- sabse latest
+
+When latest is requested:
+
+IMPORTANT:
+First identify the category/amount/type.
+Then latest means the newest transaction AMONG THOSE MATCHING VALUES.
+
+Example:
+
+If transactions are:
+
+Food ₹200
+Travel ₹200
+Travel ₹200
+Food ₹500
+
+"delete latest travel 200"
+
+means:
+
+Find Travel + ₹200
+THEN select the newest Travel + ₹200.
+
+It does NOT mean select the newest transaction overall.
+
+
+========================================
 QUERY
-==========================================
+========================================
 
 {
   "action": "query"
 }
 
-Return ONLY valid JSON.
 
-Never return an array.
-              `,
+========================================
+FINAL RULES
+========================================
+
+- Return ONLY valid JSON.
+- Never return an array.
+- Never invent category.
+- Never invent amount.
+- Never invent type.
+- Keep category exactly as spoken.
+          `,
         },
 
         {
@@ -192,13 +291,16 @@ Never return an array.
       },
     });
 
-    const parsedCommand = JSON.parse(completion.choices[0].message.content);
+    let parsedCommand = JSON.parse(completion.choices[0].message.content);
+
+    // Extra safety normalization
+    parsedCommand = normalizeCommand(parsedCommand, text);
 
     console.log("🤖 AI Parsed Command:", parsedCommand);
 
-    // ==========================================
+    // ================================
     // ADD
-    // ==========================================
+    // ================================
 
     if (parsedCommand.action === "add") {
       const transaction = await createTransaction({
@@ -217,9 +319,9 @@ Never return an array.
       });
     }
 
-    // ==========================================
+    // ================================
     // UPDATE
-    // ==========================================
+    // ================================
 
     if (parsedCommand.action === "update") {
       const transaction = await updateTransaction({
@@ -236,9 +338,9 @@ Never return an array.
       });
     }
 
-    // ==========================================
-    // DELETE - FIND ONLY
-    // ==========================================
+    // ================================
+    // DELETE
+    // ================================
 
     if (parsedCommand.action === "delete") {
       const result = await findTransactionForDelete({
@@ -255,9 +357,9 @@ Never return an array.
       });
     }
 
-    // ==========================================
+    // ================================
     // QUERY
-    // ==========================================
+    // ================================
 
     if (parsedCommand.action === "query") {
       return res.status(200).json({

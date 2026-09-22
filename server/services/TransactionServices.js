@@ -4,9 +4,7 @@ const Goal = require("../models/Goal");
 const getAvailableBalance = async (userId, excludeId = null) => {
   const query = { user: userId };
 
-  if (excludeId) {
-    query._id = { $ne: excludeId };
-  }
+  if (excludeId) query._id = { $ne: excludeId };
 
   const transactions = await Transaction.find(query);
   const goals = await Goal.find({ userId });
@@ -23,6 +21,10 @@ const getAvailableBalance = async (userId, excludeId = null) => {
 
   return income - expenses - locked;
 };
+
+// ================================
+// CREATE
+// ================================
 
 const createTransaction = async ({ userId, category, type, amount, date }) => {
   const transactionAmount = Number(amount);
@@ -52,33 +54,42 @@ const createTransaction = async ({ userId, category, type, amount, date }) => {
     }
   }
 
-  return await Transaction.create({
+  return Transaction.create({
     user: userId,
-    category: category.trim(),
+    category: String(category).trim(),
     type,
     amount: transactionAmount,
     date,
   });
 };
 
+// ================================
+// BUILD TARGET QUERY
+// ================================
+
+const escapeRegex = (value) =>
+  String(value)
+    .trim()
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const buildTargetQuery = (userId, target) => {
-  if (!target) {
+  if (!target || typeof target !== "object") {
     throw new Error("Transaction target is required");
   }
 
-  const query = { user: userId };
+  const query = {
+    user: userId,
+  };
 
+  // Category
   if (target.category) {
-    const category = String(target.category)
-      .trim()
-      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
     query.category = {
-      $regex: `^${category}$`,
+      $regex: `^${escapeRegex(target.category)}$`,
       $options: "i",
     };
   }
 
+  // Amount
   if (target.amount !== undefined && target.amount !== null) {
     const amount = Number(target.amount);
 
@@ -89,6 +100,7 @@ const buildTargetQuery = (userId, target) => {
     query.amount = amount;
   }
 
+  // Type
   if (target.type) {
     if (!["Income", "Expense"].includes(target.type)) {
       throw new Error("Invalid target transaction type");
@@ -107,6 +119,10 @@ const buildTargetQuery = (userId, target) => {
 
   return query;
 };
+
+// ================================
+// UPDATE
+// ================================
 
 const updateTransaction = async ({ userId, target, changes }) => {
   if (!changes) {
@@ -144,6 +160,7 @@ const updateTransaction = async ({ userId, target, changes }) => {
   let newCategory = transaction.category;
   let newType = transaction.type;
 
+  // Amount
   if (changes.amount !== undefined) {
     newAmount = Number(changes.amount);
 
@@ -152,6 +169,7 @@ const updateTransaction = async ({ userId, target, changes }) => {
     }
   }
 
+  // Category
   if (changes.category !== undefined) {
     newCategory = String(changes.category).trim();
 
@@ -160,6 +178,7 @@ const updateTransaction = async ({ userId, target, changes }) => {
     }
   }
 
+  // Type
   if (changes.type !== undefined) {
     if (!["Income", "Expense"].includes(changes.type)) {
       throw new Error("Invalid transaction type");
@@ -168,6 +187,7 @@ const updateTransaction = async ({ userId, target, changes }) => {
     newType = changes.type;
   }
 
+  // Balance validation
   if (newType === "Expense") {
     const availableBalance = await getAvailableBalance(userId, transaction._id);
 
@@ -190,8 +210,24 @@ const updateTransaction = async ({ userId, target, changes }) => {
   return transaction;
 };
 
+// ================================
+// FIND TRANSACTION FOR DELETE
+// ================================
+
 const findTransactionForDelete = async ({ userId, target }) => {
   const query = buildTargetQuery(userId, target);
+
+  /*
+    IMPORTANT:
+    Pehle category + amount + type se filter hoga.
+    Uske baad latest select hoga.
+
+    Example:
+    Latest Food 200
+
+    => Food + 200 ke transactions
+    => unmein latest transaction
+  */
 
   const transactions = await Transaction.find(query).sort({
     date: -1,
@@ -202,7 +238,7 @@ const findTransactionForDelete = async ({ userId, target }) => {
     throw new Error("No matching transaction found");
   }
 
-  // "last/latest" command
+  // Latest requested
   if (target.latest === true) {
     return {
       multipleMatches: false,
@@ -210,7 +246,7 @@ const findTransactionForDelete = async ({ userId, target }) => {
     };
   }
 
-  // Multiple matching transactions
+  // Multiple matches
   if (transactions.length > 1) {
     return {
       multipleMatches: true,
@@ -219,11 +255,16 @@ const findTransactionForDelete = async ({ userId, target }) => {
     };
   }
 
+  // Single match
   return {
     multipleMatches: false,
     transaction: transactions[0],
   };
 };
+
+// ================================
+// DELETE
+// ================================
 
 const deleteTransaction = async ({ userId, transactionId }) => {
   if (!transactionId) {
@@ -246,6 +287,10 @@ const deleteTransaction = async ({ userId, transactionId }) => {
 
   return transaction;
 };
+
+// ================================
+// EXPORT
+// ================================
 
 module.exports = {
   getAvailableBalance,
