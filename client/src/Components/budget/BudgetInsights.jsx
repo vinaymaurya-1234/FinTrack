@@ -2,18 +2,10 @@ import { useEffect, useState } from "react";
 import "./BudgetInsights.css";
 import { API_URL } from "../../api";
 
-function BudgetInsights() {
+function BudgetInsights({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budget, setBudget] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [budgetCategories, setBudgetCategories] = useState([]);
-
-  const currentDate = new Date();
-
-  const selectedMonth = currentDate.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  const selectedYear = currentDate.getFullYear();
 
   useEffect(() => {
     const fetchInsightsData = async () => {
@@ -29,14 +21,25 @@ function BudgetInsights() {
         const [budgetResponse, transactionResponse, categoryResponse] =
           await Promise.all([
             fetch(
-              `${API_URL}/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
+              `${API_URL}/api/budgets?month=${encodeURIComponent(
+                selectedMonth,
+              )}&year=${selectedYear}`,
+              {
+                headers,
+              },
             ),
-             fetch(`${API_URL}/api/transactions`, {
+
+            fetch(`${API_URL}/api/transactions`, {
               headers,
             }),
+
             fetch(
-              `${API_URL}/api/budget-categories?month=${selectedMonth}&year=${selectedYear}`,
-              { headers },
+              `${API_URL}/api/budget-categories?month=${encodeURIComponent(
+                selectedMonth,
+              )}&year=${selectedYear}`,
+              {
+                headers,
+              },
             ),
           ]);
 
@@ -44,57 +47,117 @@ function BudgetInsights() {
         const transactionData = await transactionResponse.json();
         const categoryData = await categoryResponse.json();
 
+        // ================================
+        // BUDGET
+        // ================================
+
         if (budgetResponse.ok) {
-          setBudget(budgetData.budget || budgetData);
+          setBudget(budgetData?.budget || budgetData || null);
+        } else {
+          console.error("Budget insights request failed:", budgetData?.message);
+
+          setBudget(null);
         }
+
+        // ================================
+        // TRANSACTIONS
+        // ================================
 
         if (transactionResponse.ok) {
-          setTransactions(transactionData);
+          setTransactions(
+            Array.isArray(transactionData) ? transactionData : [],
+          );
+        } else {
+          setTransactions([]);
         }
 
+        // ================================
+        // BUDGET CATEGORIES
+        // ================================
+
         if (categoryResponse.ok) {
-          setBudgetCategories(categoryData);
+          setBudgetCategories(Array.isArray(categoryData) ? categoryData : []);
+        } else {
+          setBudgetCategories([]);
         }
       } catch (error) {
         console.error("Error fetching insights data:", error);
+
+        setBudget(null);
+        setTransactions([]);
+        setBudgetCategories([]);
       }
     };
 
     fetchInsightsData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, selectedMonthIndex]);
+
+  // ================================
+  // FILTER SELECTED MONTH
+  // ================================
 
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
 
     return (
-      transactionDate.getMonth() === currentDate.getMonth() &&
-      transactionDate.getFullYear() === currentDate.getFullYear()
+      transactionDate.getMonth() === selectedMonthIndex &&
+      transactionDate.getFullYear() === Number(selectedYear)
     );
   });
+
+  // ================================
+  // TOTAL SPENT
+  // ================================
 
   const totalSpent = selectedMonthTransactions
     .filter((transaction) => transaction.type === "Expense")
     .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-  const totalBudget = budget ? Number(budget.amount) : 0;
+  // ================================
+  // TOTAL BUDGET
+  // ================================
+
+  const totalBudget = budget ? Number(budget.amount) || 0 : 0;
+
+  // ================================
+  // REMAINING
+  // ================================
 
   const totalRemaining = totalBudget - totalSpent;
 
+  // ================================
+  // USED %
+  // ================================
+
   const usedPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+  // ================================
+  // CATEGORY SPENDING
+  // ================================
 
   const getCategorySpent = (category) => {
     return selectedMonthTransactions
       .filter(
         (transaction) =>
           transaction.type === "Expense" &&
-          transaction.category.toLowerCase() === category.toLowerCase(),
+          String(transaction.category || "")
+            .trim()
+            .toLowerCase() ===
+            String(category || "")
+              .trim()
+              .toLowerCase(),
       )
       .reduce((total, transaction) => total + Number(transaction.amount), 0);
   };
 
+  // ================================
+  // CATEGORY INSIGHTS
+  // ================================
+
   const categoryInsights = budgetCategories.map((category) => {
     const spent = getCategorySpent(category.category);
-    const categoryBudget = Number(category.amount);
+
+    const categoryBudget = Number(category.amount) || 0;
 
     const progress = categoryBudget > 0 ? (spent / categoryBudget) * 100 : 0;
 
@@ -105,13 +168,25 @@ function BudgetInsights() {
     };
   });
 
+  // ================================
+  // EXCEEDED CATEGORIES
+  // ================================
+
   const exceededCategories = categoryInsights.filter(
     (category) => category.progress > 100,
   );
 
+  // ================================
+  // HIGHEST EXCEEDED
+  // ================================
+
   const highestExceededCategory = [...exceededCategories].sort(
     (a, b) => b.progress - a.progress,
   )[0];
+
+  // ================================
+  // HIGHEST SPENDING
+  // ================================
 
   const highestSpentCategory = [...categoryInsights].sort(
     (a, b) => b.spent - a.spent,
@@ -122,6 +197,10 @@ function BudgetInsights() {
       <h3>Budget Insights</h3>
 
       <div className="insight-list">
+        {/* ================================
+            BUDGET INSIGHT
+        ================================= */}
+
         <div className="insight">
           <div
             className={`insight-icon ${
@@ -152,6 +231,10 @@ function BudgetInsights() {
           </div>
         </div>
 
+        {/* ================================
+            CATEGORY INSIGHT
+        ================================= */}
+
         <div className="insight">
           <div className="insight-icon warning">⚠</div>
 
@@ -176,6 +259,10 @@ function BudgetInsights() {
           </div>
         </div>
 
+        {/* ================================
+            PERSONALIZED TIP
+        ================================= */}
+
         <div className="insight">
           <div className="insight-icon info">i</div>
 
@@ -183,10 +270,8 @@ function BudgetInsights() {
             <h4>Tip for you</h4>
 
             <p>
-              {highestSpentCategory
-                ? `Your highest spending category is ${
-                    highestSpentCategory.category
-                  } with ₹${highestSpentCategory.spent.toLocaleString(
+              {highestSpentCategory && highestSpentCategory.spent > 0
+                ? `Your highest spending category is ${highestSpentCategory.category} with ₹${highestSpentCategory.spent.toLocaleString(
                     "en-IN",
                   )} spent.`
                 : "Add transactions to start getting personalized insights."}
@@ -199,7 +284,3 @@ function BudgetInsights() {
 }
 
 export default BudgetInsights;
-
-
-
-

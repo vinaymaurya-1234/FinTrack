@@ -9,66 +9,37 @@ import RecentSpending from "../Components/budget/RecentSpending";
 
 function Budget() {
   const navigate = useNavigate();
+
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonthIndex = currentDate.getMonth();
 
-  // Modal states
+  // ================================
+  // ADD BUDGET MODAL
+  // ================================
+
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
 
-  // Month picker
+  // ================================
+  // MONTH PICKER
+  // ================================
+
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
-  // Actual applied month/year
-  // Page initially current month show karega
   const [selectedMonthIndex, setSelectedMonthIndex] =
     useState(currentMonthIndex);
 
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
-  // Temporary month/year
-  // Dropdown ke andar use hoga
   const [tempMonthIndex, setTempMonthIndex] = useState(currentMonthIndex);
 
   const [tempYear, setTempYear] = useState(currentYear);
 
-  // Current month name
-  const currentMonth = currentDate.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  // Applied selected month name
-  const selectedMonth = new Date(
-    selectedYear,
-    selectedMonthIndex,
-  ).toLocaleString("en-US", {
-    month: "long",
-  });
-
-  // Next month
-  const nextDate = new Date(currentYear, currentMonthIndex + 1, 1);
-
-  const nextMonth = nextDate.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  const nextYear = nextDate.getFullYear();
-
-  // Budget periods
-  const budgetPeriods = [
-    {
-      month: currentMonth,
-      year: currentYear,
-      label: `${currentMonth} ${currentYear}`,
-    },
-    {
-      month: nextMonth,
-      year: nextYear,
-      label: `${nextMonth} ${nextYear}`,
-    },
-  ];
+  // ================================
+  // MONTH NAMES
+  // ================================
 
   const months = [
     "January",
@@ -85,10 +56,63 @@ function Budget() {
     "December",
   ];
 
-  // Save Budget
+  // Current month
+  const currentMonth = currentDate.toLocaleString("en-US", {
+    month: "long",
+  });
+
+  // Selected month
+  const selectedMonth = new Date(
+    selectedYear,
+    selectedMonthIndex,
+    1,
+  ).toLocaleString("en-US", {
+    month: "long",
+  });
+
+  // ================================
+  // NEXT MONTH
+  // ================================
+
+  const nextDate = new Date(currentYear, currentMonthIndex + 1, 1);
+
+  const nextMonth = nextDate.toLocaleString("en-US", {
+    month: "long",
+  });
+
+  const nextYear = nextDate.getFullYear();
+
+  // ================================
+  // ALLOWED BUDGET PERIODS
+  // ================================
+
+  const budgetPeriods = [
+    {
+      month: currentMonth,
+      year: currentYear,
+      label: `${currentMonth} ${currentYear}`,
+    },
+    {
+      month: nextMonth,
+      year: nextYear,
+      label: `${nextMonth} ${nextYear}`,
+    },
+  ];
+
+  // ================================
+  // SAVE BUDGET
+  // ================================
+
   const saveBudget = async () => {
     if (!amount || !selectedPeriod) {
       alert("Please enter amount and select a budget period");
+      return;
+    }
+
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      alert("Please enter a valid budget amount");
       return;
     }
 
@@ -103,15 +127,24 @@ function Budget() {
       (period) => period.label === selectedPeriod,
     );
 
+    if (!selectedBudget) {
+      alert("Invalid budget period");
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_URL}/budgets`, {
+      // IMPORTANT:
+      // Backend route is /api/budgets
+      const response = await fetch(`${API_URL}/api/budgets`, {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+
         body: JSON.stringify({
-          amount: Number(amount),
+          amount: numericAmount,
           month: selectedBudget.month,
           year: selectedBudget.year,
         }),
@@ -119,43 +152,58 @@ function Budget() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert("Budget added successfully!");
+      if (!response.ok) {
+        alert(data.message || "Failed to save budget");
+        return;
+      }
 
-        setShowModal(false);
-        setAmount("");
-        setSelectedPeriod("");
-      } else {
-        alert(data.message);
+      alert(data.message || "Budget saved successfully!");
+
+      setShowModal(false);
+      setAmount("");
+      setSelectedPeriod("");
+
+      // If budget was created for current/next month,
+      // move page to that month automatically.
+      const savedMonthIndex = months.indexOf(selectedBudget.month);
+
+      if (savedMonthIndex !== -1) {
+        setSelectedMonthIndex(savedMonthIndex);
+        setSelectedYear(selectedBudget.year);
       }
     } catch (error) {
       console.error("Error saving budget:", error);
-      alert("Something went wrong");
+      alert("Unable to connect to server. Please try again.");
     }
   };
 
-  // Close modal
+  // ================================
+  // CLOSE MODAL
+  // ================================
+
   const closeModal = () => {
     setShowModal(false);
     setAmount("");
     setSelectedPeriod("");
   };
 
-  // Open month picker
+  // ================================
+  // MONTH PICKER
+  // ================================
+
   const handleMonthPicker = () => {
-    // Current applied value temporary state me set karo
     setTempMonthIndex(selectedMonthIndex);
     setTempYear(selectedYear);
-
     setShowMonthPicker(!showMonthPicker);
   };
 
-  // Apply selected month/year
+  // ================================
+  // APPLY MONTH FILTER
+  // ================================
+
   const applyMonthFilter = () => {
-    // Actual page data ab change hoga
     setSelectedMonthIndex(tempMonthIndex);
     setSelectedYear(tempYear);
-
     setShowMonthPicker(false);
   };
 
@@ -166,11 +214,12 @@ function Budget() {
       <div className="budget-top">
         <div>
           <h2>Budget</h2>
+
           <p>Manage your money with clarity and confidence.</p>
         </div>
 
         <div className="budget-top-actions">
-          {/* ADD BUDGET BUTTON */}
+          {/* ADD BUDGET */}
 
           <button className="add-budget-btn" onClick={() => setShowModal(true)}>
             + Add Budget
@@ -185,8 +234,6 @@ function Budget() {
 
             {showMonthPicker && (
               <div className="month-picker-dropdown">
-                {/* MONTH */}
-
                 <div className="picker-group">
                   <label>Month</label>
 
@@ -201,8 +248,6 @@ function Budget() {
                     ))}
                   </select>
                 </div>
-
-                {/* YEAR */}
 
                 <div className="picker-group">
                   <label>Year</label>
@@ -222,8 +267,6 @@ function Budget() {
                     })}
                   </select>
                 </div>
-
-                {/* APPLY */}
 
                 <button className="apply-month-btn" onClick={applyMonthFilter}>
                   Apply
@@ -245,6 +288,7 @@ function Budget() {
 
             <input
               type="number"
+              min="1"
               placeholder="Enter budget amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -287,8 +331,6 @@ function Budget() {
       {/* ================= MAIN CONTENT ================= */}
 
       <div className="budget-content">
-        {/* LEFT SIDE */}
-
         <div className="left-content">
           <BudgetInsights
             selectedMonth={selectedMonth}
@@ -302,8 +344,6 @@ function Budget() {
             selectedMonthIndex={selectedMonthIndex}
           />
         </div>
-
-        {/* RIGHT SIDE */}
 
         <div className="right-content">
           <RecentSpending

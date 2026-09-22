@@ -26,7 +26,7 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
         const budgetData = await budgetResponse.json();
 
         if (budgetResponse.ok) {
-          setBudget(budgetData.budget || budgetData);
+          setBudget(budgetData?.budget || budgetData || null);
         } else {
           setBudget(null);
         }
