@@ -214,9 +214,92 @@ const updateTransaction = async ({ userId, target, changes }) => {
   return transaction;
 };
 
+// ================================
+// FIND TRANSACTION FOR DELETE
+// ================================
+
+const findTransactionForDelete = async ({ userId, target }) => {
+  if (!target) {
+    throw new Error("Delete target is required");
+  }
+
+  // --------------------------------
+  // Build search query
+  // --------------------------------
+
+  const query = {
+    user: userId,
+  };
+
+  // Category target
+  if (target.category) {
+    query.category = {
+      $regex: `^${String(target.category)
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      $options: "i",
+    };
+  }
+
+  // Amount target
+  if (target.amount !== undefined && target.amount !== null) {
+    const targetAmount = Number(target.amount);
+
+    if (!Number.isFinite(targetAmount) || targetAmount <= 0) {
+      throw new Error("Invalid target amount");
+    }
+
+    query.amount = targetAmount;
+  }
+
+  // Type target
+  if (target.type) {
+    if (!["Income", "Expense"].includes(target.type)) {
+      throw new Error("Invalid target transaction type");
+    }
+
+    query.type = target.type;
+  }
+
+  // --------------------------------
+  // Make sure at least one target
+  // field is provided
+  // --------------------------------
+
+  if (
+    !target.category &&
+    target.amount === undefined &&
+    target.type === undefined
+  ) {
+    throw new Error(
+      "Please specify which transaction should be deleted",
+    );
+  }
+
+  // --------------------------------
+  // Find matching transactions
+  // --------------------------------
+
+  const matchingTransactions = await Transaction.find(query);
+
+  if (matchingTransactions.length === 0) {
+    throw new Error("No matching transaction found");
+  }
+
+  // Don't delete automatically when
+  // multiple transactions match.
+  if (matchingTransactions.length > 1) {
+    throw new Error(
+      "Multiple matching transactions found. Please specify the transaction more clearly",
+    );
+  }
+
+  return matchingTransactions[0];
+};
 
 module.exports = {
   getAvailableBalance,
   createTransaction,
   updateTransaction,
+  findTransactionForDelete,
 };
