@@ -53,26 +53,36 @@ function Navbar({ isOpen, setIsOpen }) {
   // ======================================================
 
   const refreshAppData = (command) => {
-    if (command === "add" || command === "update" || command === "delete") {
-      window.dispatchEvent(new CustomEvent("transactionUpdated"));
-    }
-    
-    if (
-      command === "add_category" ||
-      command === "update_category" ||
-      command === "delete_category"
-    ) {
-      window.dispatchEvent(new CustomEvent("categoryUpdated"));
-    }
+  if (
+    command === "add" ||
+    command === "update" ||
+    command === "delete"
+  ) {
+    window.dispatchEvent(
+      new CustomEvent("transactionUpdated"),
+    );
+  }
 
-    if (
-      command === "add_budget" ||
-      command === "update_budget" ||
-      command === "delete_budget"
-    ) {
-      window.dispatchEvent(new CustomEvent("budgetUpdated"));
-    }
-  };
+  if (
+    command === "add_category" ||
+    command === "update_category" ||
+    command === "delete_category"
+  ) {
+    window.dispatchEvent(
+      new CustomEvent("categoryUpdated"),
+    );
+  }
+
+  if (
+    command === "add_budget" ||
+    command === "update_budget" ||
+    command === "delete_budget"
+  ) {
+    window.dispatchEvent(
+      new CustomEvent("budgetUpdated"),
+    );
+  }
+};
 
   // ======================================================
   // CONFIRM DELETE TRANSACTION

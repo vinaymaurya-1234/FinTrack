@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Budget = require("../models/Budget");
+const BudgetCategory = require("../models/BudgetCategory");
 const protect = require("../middleware/authMiddleware");
 
 // Create or update budget
@@ -28,11 +29,7 @@ router.post("/", protect, async (req, res) => {
 
     const currentYear = currentDate.getFullYear();
 
-    const nextDate = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      1,
-    );
+    const nextDate = new Date(currentYear, currentDate.getMonth() + 1, 1);
 
     const nextMonth = nextDate.toLocaleString("en-US", {
       month: "long",
@@ -77,12 +74,12 @@ router.post("/", protect, async (req, res) => {
 
     await newBudget.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Budget added successfully",
       budget: newBudget,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error saving budget",
       error: error.message,
     });
@@ -100,9 +97,9 @@ router.get("/", protect, async (req, res) => {
       year: Number(year),
     });
 
-    res.status(200).json(budget);
+    return res.status(200).json(budget);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error fetching budget",
       error: error.message,
     });
@@ -132,16 +129,22 @@ router.delete("/", protect, async (req, res) => {
       });
     }
 
+    await BudgetCategory.deleteMany({
+      user: req.user._id,
+      month,
+      year: Number(year),
+    });
+
     await Budget.deleteOne({
       _id: budget._id,
       user: req.user._id,
     });
 
-    res.status(200).json({
-      message: "Budget deleted successfully",
+    return res.status(200).json({
+      message: `Budget deleted successfully for ${month} ${year}`,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "Error deleting budget",
       error: error.message,
     });
