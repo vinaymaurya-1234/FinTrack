@@ -53,18 +53,24 @@ function Navbar({ isOpen, setIsOpen }) {
   // ======================================================
 
   const refreshAppData = (command) => {
-    // Transaction related changes
     if (command === "add" || command === "update" || command === "delete") {
       window.dispatchEvent(new CustomEvent("transactionUpdated"));
     }
-
-    // Budget category change
+    
     if (
       command === "add_category" ||
       command === "update_category" ||
       command === "delete_category"
     ) {
       window.dispatchEvent(new CustomEvent("categoryUpdated"));
+    }
+
+    if (
+      command === "add_budget" ||
+      command === "update_budget" ||
+      command === "delete_budget"
+    ) {
+      window.dispatchEvent(new CustomEvent("budgetUpdated"));
     }
   };
 

@@ -6,58 +6,62 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
   const [budget, setBudget] = useState(null);
   const [transactions, setTransactions] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        if (!token) return;
+      if (!token) return;
 
-        // Selected month ka budget
-        const budgetResponse = await fetch(
-          `${API_URL}/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        const budgetData = await budgetResponse.json();
-
-        if (budgetResponse.ok) {
-          setBudget(budgetData?.budget || budgetData || null);
-        } else {
-          setBudget(null);
-        }
-
-        // All transactions
-        const transactionResponse = await fetch(`${API_URL}/api/transactions`, {
+      const budgetResponse = await fetch(
+        `${API_URL}/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
+        },
+      );
 
-        const transactionData = await transactionResponse.json();
+      const budgetData = await budgetResponse.json();
 
-        if (transactionResponse.ok) {
-          setTransactions(transactionData);
-        } else {
-          setTransactions([]);
-        }
-      } catch (error) {
-        console.error("Error fetching overview data:", error);
+      if (budgetResponse.ok) {
+        setBudget(budgetData.budget || budgetData);
+      } else {
         setBudget(null);
+      }
+
+      const transactionResponse = await fetch(`${API_URL}/api/transactions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const transactionData = await transactionResponse.json();
+
+      if (transactionResponse.ok) {
+        setTransactions(transactionData);
+      } else {
         setTransactions([]);
       }
+    } catch (error) {
+      console.error("Error fetching overview data:", error);
+      setBudget(null);
+      setTransactions([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    const handleBudgetUpdate = () => {
+      fetchData();
     };
 
-    fetchData();
-  }, [selectedMonth, selectedYear]);
+    window.addEventListener("budgetUpdated", handleBudgetUpdate);
 
-  // IMPORTANT:
-  // Current date use NAHI karna hai.
-  // Parent se jo month/year aaya hai wahi use hoga.
+    return () => {
+      window.removeEventListener("budgetUpdated", handleBudgetUpdate);
+    };
+  }, [selectedMonth, selectedYear]);
 
   const selectedMonthTransactions = transactions.filter((transaction) => {
     const transactionDate = new Date(transaction.date);
@@ -70,12 +74,9 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
 
   const totalSpent = selectedMonthTransactions
     .filter((transaction) => transaction.type === "Expense")
-    .reduce((total, transaction) => {
-      return total + Number(transaction.amount);
-    }, 0);
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
   const totalBudget = budget ? Number(budget.amount) : 0;
-
   const totalRemaining = totalBudget - totalSpent;
 
   const usedPercentage =
@@ -101,9 +102,7 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
         <div className="budget-progress-bar">
           <div
             className="budget-progress-fill"
-            style={{
-              width: `${usedPercentage}%`,
-            }}
+            style={{ width: `${usedPercentage}%` }}
           />
         </div>
 
@@ -128,7 +127,6 @@ function BudgetOverview({ selectedMonth, selectedYear, selectedMonthIndex }) {
           }}
         >
           <h2>{usedPercentage.toFixed(0)}%</h2>
-
           <span>of budget</span>
           <span>used</span>
         </div>

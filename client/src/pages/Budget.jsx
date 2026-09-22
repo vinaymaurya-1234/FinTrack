@@ -1,5 +1,5 @@
 import "./Budget.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL } from "../api";
 import BudgetOverview from "../Components/budget/BudgetOverview";
@@ -14,17 +14,9 @@ function Budget() {
   const currentYear = currentDate.getFullYear();
   const currentMonthIndex = currentDate.getMonth();
 
-  // ================================
-  // ADD BUDGET MODAL
-  // ================================
-
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedPeriod, setSelectedPeriod] = useState("");
-
-  // ================================
-  // MONTH PICKER
-  // ================================
 
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
@@ -34,12 +26,39 @@ function Budget() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const [tempMonthIndex, setTempMonthIndex] = useState(currentMonthIndex);
-
   const [tempYear, setTempYear] = useState(currentYear);
 
-  // ================================
-  // MONTH NAMES
-  // ================================
+  const currentMonth = currentDate.toLocaleString("en-US", {
+    month: "long",
+  });
+
+  const selectedMonth = new Date(
+    selectedYear,
+    selectedMonthIndex,
+  ).toLocaleString("en-US", {
+    month: "long",
+  });
+
+  const nextDate = new Date(currentYear, currentMonthIndex + 1, 1);
+
+  const nextMonth = nextDate.toLocaleString("en-US", {
+    month: "long",
+  });
+
+  const nextYear = nextDate.getFullYear();
+
+  const budgetPeriods = [
+    {
+      month: currentMonth,
+      year: currentYear,
+      label: `${currentMonth} ${currentYear}`,
+    },
+    {
+      month: nextMonth,
+      year: nextYear,
+      label: `${nextMonth} ${nextYear}`,
+    },
+  ];
 
   const months = [
     "January",
@@ -56,63 +75,22 @@ function Budget() {
     "December",
   ];
 
-  // Current month
-  const currentMonth = currentDate.toLocaleString("en-US", {
-    month: "long",
-  });
+  // Voice budget change ke baad page refresh
+  useEffect(() => {
+    const handleBudgetUpdate = () => {
+      window.dispatchEvent(new CustomEvent("budgetUpdated"));
+    };
 
-  // Selected month
-  const selectedMonth = new Date(
-    selectedYear,
-    selectedMonthIndex,
-    1,
-  ).toLocaleString("en-US", {
-    month: "long",
-  });
+    window.addEventListener("budgetUpdated", handleBudgetUpdate);
 
-  // ================================
-  // NEXT MONTH
-  // ================================
-
-  const nextDate = new Date(currentYear, currentMonthIndex + 1, 1);
-
-  const nextMonth = nextDate.toLocaleString("en-US", {
-    month: "long",
-  });
-
-  const nextYear = nextDate.getFullYear();
-
-  // ================================
-  // ALLOWED BUDGET PERIODS
-  // ================================
-
-  const budgetPeriods = [
-    {
-      month: currentMonth,
-      year: currentYear,
-      label: `${currentMonth} ${currentYear}`,
-    },
-    {
-      month: nextMonth,
-      year: nextYear,
-      label: `${nextMonth} ${nextYear}`,
-    },
-  ];
-
-  // ================================
-  // SAVE BUDGET
-  // ================================
+    return () => {
+      window.removeEventListener("budgetUpdated", handleBudgetUpdate);
+    };
+  }, []);
 
   const saveBudget = async () => {
     if (!amount || !selectedPeriod) {
       alert("Please enter amount and select a budget period");
-      return;
-    }
-
-    const numericAmount = Number(amount);
-
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      alert("Please enter a valid budget amount");
       return;
     }
 
@@ -127,24 +105,15 @@ function Budget() {
       (period) => period.label === selectedPeriod,
     );
 
-    if (!selectedBudget) {
-      alert("Invalid budget period");
-      return;
-    }
-
     try {
-      // IMPORTANT:
-      // Backend route is /api/budgets
       const response = await fetch(`${API_URL}/api/budgets`, {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-
         body: JSON.stringify({
-          amount: numericAmount,
+          amount: Number(amount),
           month: selectedBudget.month,
           year: selectedBudget.year,
         }),
@@ -152,34 +121,22 @@ function Budget() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(data.message || "Failed to save budget");
-        return;
-      }
+      if (response.ok) {
+        alert("Budget added successfully!");
 
-      alert(data.message || "Budget saved successfully!");
+        window.dispatchEvent(new CustomEvent("budgetUpdated"));
 
-      setShowModal(false);
-      setAmount("");
-      setSelectedPeriod("");
-
-      // If budget was created for current/next month,
-      // move page to that month automatically.
-      const savedMonthIndex = months.indexOf(selectedBudget.month);
-
-      if (savedMonthIndex !== -1) {
-        setSelectedMonthIndex(savedMonthIndex);
-        setSelectedYear(selectedBudget.year);
+        setShowModal(false);
+        setAmount("");
+        setSelectedPeriod("");
+      } else {
+        alert(data.message);
       }
     } catch (error) {
       console.error("Error saving budget:", error);
-      alert("Unable to connect to server. Please try again.");
+      alert("Something went wrong");
     }
   };
-
-  // ================================
-  // CLOSE MODAL
-  // ================================
 
   const closeModal = () => {
     setShowModal(false);
@@ -187,19 +144,11 @@ function Budget() {
     setSelectedPeriod("");
   };
 
-  // ================================
-  // MONTH PICKER
-  // ================================
-
   const handleMonthPicker = () => {
     setTempMonthIndex(selectedMonthIndex);
     setTempYear(selectedYear);
     setShowMonthPicker(!showMonthPicker);
   };
-
-  // ================================
-  // APPLY MONTH FILTER
-  // ================================
 
   const applyMonthFilter = () => {
     setSelectedMonthIndex(tempMonthIndex);
@@ -209,23 +158,16 @@ function Budget() {
 
   return (
     <div className="budget-page">
-      {/* ================= TOP SECTION ================= */}
-
       <div className="budget-top">
         <div>
           <h2>Budget</h2>
-
           <p>Manage your money with clarity and confidence.</p>
         </div>
 
         <div className="budget-top-actions">
-          {/* ADD BUDGET */}
-
           <button className="add-budget-btn" onClick={() => setShowModal(true)}>
             + Add Budget
           </button>
-
-          {/* MONTH SELECTOR */}
 
           <div className="month-selector">
             <button className="month-btn" onClick={handleMonthPicker}>
@@ -277,8 +219,6 @@ function Budget() {
         </div>
       </div>
 
-      {/* ================= ADD BUDGET MODAL ================= */}
-
       {showModal && (
         <div className="budget-modal-overlay">
           <div className="budget-modal">
@@ -288,7 +228,6 @@ function Budget() {
 
             <input
               type="number"
-              min="1"
               placeholder="Enter budget amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -320,15 +259,11 @@ function Budget() {
         </div>
       )}
 
-      {/* ================= BUDGET OVERVIEW ================= */}
-
       <BudgetOverview
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
         selectedMonthIndex={selectedMonthIndex}
       />
-
-      {/* ================= MAIN CONTENT ================= */}
 
       <div className="budget-content">
         <div className="left-content">
